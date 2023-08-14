@@ -61,10 +61,9 @@ func main() {
 
 ## TODO
 
-- Add `Clean` API
-- reconsider method receiver, by Value or by Pointer
-- Tests, especially for `null/nill`
+- Do we really need escapeHTML?
 - More comments on json.go, try remove reflect?
+- Tests, especially for `null/nill`
 
 ## LICENSE
 

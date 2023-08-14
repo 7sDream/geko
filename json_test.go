@@ -7,6 +7,17 @@ import (
 	"github.com/7sDream/geko"
 )
 
+func TestJSONMarshal(t *testing.T) {
+	kom := geko.NewMap[string, any]()
+	kom.Set("html", "<.+&>")
+
+	data, err := geko.JSONMarshal(kom, geko.EscapeHTML(false))
+	if err != nil {
+		t.Fatalf("Error: %s", err.Error())
+	}
+	t.Logf("marshal result: %s", string(data))
+}
+
 func TestJSONUnmarshal(t *testing.T) {
 	data := `{"two":2,"one":1,"three":null}`
 	value, err := geko.JSONUnmarshal([]byte(data), geko.UseNumber(true))

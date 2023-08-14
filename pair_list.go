@@ -2,8 +2,12 @@ package geko
 
 import "sort"
 
-// PairList is a list of pair, it can be unmarshal/unmarshal from/to a json **object**.
+// Wrapper type for []Pair[K, V], it can be unmarshal/unmarshal from/to a json **object**.
+// In JSON Unmarshal and marshal, it will use the order of keys appear in JSON string and output as is.
 // It will save all items even if their Key is duplicated.
+//
+// When Unmarshal from json into a `ParList[string, any]`, all json object will store in `ParList[string, any]`,
+// all json array will store in `List[any]`, instead of normal `map[string]any` and `[]any` from stdlib.
 type PairList[K comparable, V any] struct {
 	List []Pair[K, V]
 
@@ -24,14 +28,6 @@ func NewPairListFrom[K comparable, V any](list []Pair[K, V]) *PairList[K, V] {
 	}
 	pairs.List = list
 	return pairs
-}
-
-func (kopl *PairList[K, V]) SetEscapeHTML(escape bool) {
-	kopl.escapeHTML = escape
-}
-
-func (kopl *PairList[K, V]) EscapeHTML() bool {
-	return kopl.escapeHTML
 }
 
 func (kopl *PairList[K, V]) Get(key K) []V {
@@ -109,7 +105,6 @@ func (kopl *PairList[K, V]) Values() []V {
 
 func (kopl *PairList[K, V]) ToMap() *Map[K, V] {
 	kom := NewMap[K, V]()
-	kom.SetEscapeHTML(kom.escapeHTML)
 	kom.Extend(kopl.List...)
 	return kom
 }
@@ -123,11 +118,11 @@ func (kopl *PairList[K, V]) Sort(lessFunc PairLessFunc[K, V]) {
 // MarshalJSON implements json.Marshaler interface.
 // You should not call this directly, use json.Marshal(kom) instead.
 func (kom PairList[K, V]) MarshalJSON() ([]byte, error) {
-	return marshalObject(&kom)
+	return marshalObject[K, V](&kom)
 }
 
 // UnmarshalJSON implements json.Unmarshaler interface.
 // You shouldn't call this directly, use json.Unmarshal(kom) instead.
 func (kom *PairList[K, V]) UnmarshalJSON(data []byte) error {
-	return unmarshalObject(data, kom)
+	return unmarshalObject[K, V](data, kom, UsePairList(true))
 }

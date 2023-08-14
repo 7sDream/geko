@@ -8,41 +8,156 @@ import (
 	"unsafe"
 )
 
-// Decode likes json.Unmarshal, but uses our Map and List when meet JSON object and array.
+// ===== Encoder =====
+
+// JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON object and array.
 //
 // So the returned value can be:
 // bool, float64/json.Number, string, nil, Map[string]any/PairList[string]any, List[any].
 //
 // The `any` value in the above container can only be the above type, recursive.
-func JSONUnmarshal(data []byte, option ...Option) (any, error) {
+func JSONMarshal(v any, option ...EncodeOption) ([]byte, error) {
+	return nil, newEncoder(option...).encode(v)
+}
+
+type encoderOptions struct {
+	escapeHTML           bool
+	indentPrefix, indent string
+}
+
+type EncodeOption func(opts *encoderOptions)
+
+func EscapeHTML(v bool) EncodeOption {
+	return func(opts *encoderOptions) {
+		opts.escapeHTML = v
+	}
+}
+
+func WithIndent(prefix string, indent string) EncodeOption {
+	return func(opts *encoderOptions) {
+		opts.indentPrefix = prefix
+		opts.indent = indent
+	}
+}
+
+type encoder struct {
+	buf     bytes.Buffer
+	encoder *json.Encoder
+	opts    encoderOptions
+}
+
+func newEncoder(option ...EncodeOption) *encoder {
+	encoder := &encoder{}
+
+	for _, opt := range option {
+		opt(&encoder.opts)
+	}
+
+	return encoder
+}
+
+type jsonMarshalerExt interface {
+	jsonMarshalExt(e *encoder) ([]byte, error)
+}
+
+func (e *encoder) encode(v any) error {
+	e.encoder = json.NewEncoder(&e.buf)
+	e.encoder.SetEscapeHTML(e.opts.escapeHTML)
+	e.encoder.SetIndent(e.opts.indentPrefix, e.opts.indent)
+
+	if ext, ok := v.(jsonMarshalerExt); ok {
+		return ext.jsonMarshalExt(e)
+	}
+
+	switch v.(type) {
+	case bool, float64, json.Number, string, nil:
+		{
+			return e.encoder.Encode(v)
+		}
+	case map[string]any:
+		{
+			// TODO
+		}
+	case []any:
+		{
+			// TODO
+		}
+	}
+
+	return nil
+}
+
+func encodeObject[K comparable, V any, O jsonObjectLike[K, V]](
+	e *encoder, object jsonObjectLike[string, any],
+) error {
+	if !IsString[K]() {
+		return &json.UnsupportedTypeError{
+			Type: reflect.TypeOf(object),
+		}
+	}
+
+	e.buf.WriteByte('{')
+
+	for i := 0; i < object.Len(); i++ {
+		if i > 0 {
+			e.buf.WriteByte(',')
+		}
+
+		pair := object.GetByIndex(i)
+
+		if err := e.encode(pair.Key); err != nil {
+			return err
+		}
+
+		e.buf.WriteByte(':')
+
+		if err := e.encode(pair.Value); err != nil {
+			return err
+		}
+	}
+
+	e.buf.WriteByte('}')
+
+	return nil
+}
+
+// ===== Decoder =====
+
+// JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON object and array.
+//
+// So the returned value can be:
+// bool, float64/json.Number, string, nil, Map[string]any/PairList[string]any, List[any].
+//
+// The `any` value in the above container can only be the above type, recursive.
+func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 	return newDecoder(bytes.NewReader(data), option...).decode()
 }
 
-type options struct {
+type decodeOptions struct {
 	useNumber   bool
 	usePairList bool
 }
 
-type Option func(opts *options)
+type DecodeOption func(opts *decodeOptions)
 
-func UseNumber(v bool) Option {
-	return func(opts *options) {
+func UseNumber(v bool) DecodeOption {
+	return func(opts *decodeOptions) {
 		opts.useNumber = v
 	}
 }
 
-func UsePairList(v bool) Option {
-	return func(opts *options) {
+func UsePairList(v bool) DecodeOption {
+	return func(opts *decodeOptions) {
 		opts.usePairList = v
 	}
 }
 
 type decoder struct {
 	decoder *json.Decoder
-	opts    options
+	opts    decodeOptions
 }
 
-func newDecoder(r io.Reader, option ...Option) *decoder {
+func newDecoder(r io.Reader, option ...DecodeOption) *decoder {
 	decoder := &decoder{
 		decoder: json.NewDecoder(r),
 	}
@@ -59,7 +174,7 @@ func (d *decoder) decode() (any, error) {
 		d.decoder.UseNumber()
 	}
 
-	item, err := d.next(nil)
+	item, err := d.next()
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +201,7 @@ func newSyntaxError(msg string, offset int64) *json.SyntaxError {
 	return err
 }
 
-func (d *decoder) next(escapeHTML *bool) (any, error) {
+func (d *decoder) next() (any, error) {
 	var token json.Token
 	var err error
 
@@ -94,10 +209,10 @@ func (d *decoder) next(escapeHTML *bool) (any, error) {
 		return nil, err
 	}
 
-	return d.nextByToken(token, escapeHTML)
+	return d.nextAfterToken(token)
 }
 
-func (d *decoder) nextByToken(token json.Token, escapeHTML *bool) (any, error) {
+func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 	var value any
 
 	switch v := token.(type) {
@@ -113,10 +228,7 @@ func (d *decoder) nextByToken(token json.Token, escapeHTML *bool) (any, error) {
 				} else {
 					object = NewMap[string, any]()
 				}
-				if escapeHTML != nil {
-					object.SetEscapeHTML(*escapeHTML)
-				}
-				if err := parseIntoObject(d, object, true); err != nil {
+				if err := parseIntoObject[string, any](d, object, true); err != nil {
 					return nil, err
 				}
 				value = object
@@ -124,10 +236,7 @@ func (d *decoder) nextByToken(token json.Token, escapeHTML *bool) (any, error) {
 		case '[':
 			{
 				kol := NewList[any]()
-				if escapeHTML != nil {
-					kol.SetEscapeHTML(*escapeHTML)
-				}
-				if err := parseIntoArray(d, kol); err != nil {
+				if err := parseIntoArray[any](d, kol); err != nil {
 					return nil, err
 				}
 				value = kol
@@ -141,22 +250,18 @@ func (d *decoder) nextByToken(token json.Token, escapeHTML *bool) (any, error) {
 // Array
 
 type jsonArrayLike[T any] interface {
-	EscapeHTML() bool
 	innerSlice() *[]T
 }
 
 func marshalArray[T any, A jsonArrayLike[T]](array A) ([]byte, error) {
 	var data bytes.Buffer
 	encoder := json.NewEncoder(&data)
-	encoder.SetEscapeHTML(array.EscapeHTML())
 
 	err := encoder.Encode(*array.innerSlice())
 	return data.Bytes(), err
 }
 
 func parseIntoArray[T any, A jsonArrayLike[T]](d *decoder, array A) error {
-	escape := array.EscapeHTML()
-
 	for {
 		token, err := d.decoder.Token()
 		if err != nil {
@@ -171,7 +276,7 @@ func parseIntoArray[T any, A jsonArrayLike[T]](d *decoder, array A) error {
 
 		var value T
 
-		if v, err := d.nextByToken(token, &escape); err != nil {
+		if v, err := d.nextAfterToken(token); err != nil {
 			return err
 		} else {
 			value = v.(T)
@@ -200,21 +305,19 @@ func unmarshalArray[T any, A jsonArrayLike[T]](data []byte, array A) error {
 		}
 	}
 
-	return parseIntoArray(d, array)
+	return parseIntoArray[T](d, array)
 }
 
 // Object
 
 type jsonObjectLike[K comparable, V any] interface {
-	EscapeHTML() bool
-	SetEscapeHTML(bool)
 	GetByIndex(int) Pair[K, V]
 	Set(K, V)
 	Len() int
 }
 
 func marshalObject[K comparable, V any, O jsonObjectLike[K, V]](object O) ([]byte, error) {
-	if !underlyingIsString[K]() {
+	if !IsString[K]() {
 		return nil, &json.UnsupportedTypeError{
 			Type: reflect.TypeOf(object),
 		}
@@ -222,7 +325,6 @@ func marshalObject[K comparable, V any, O jsonObjectLike[K, V]](object O) ([]byt
 
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(object.EscapeHTML())
 
 	buf.WriteByte('{')
 
@@ -272,8 +374,7 @@ func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
 		var value V
 
 		if valueIsAny { // if v is any, we parse it into our json value types
-			escape := object.EscapeHTML()
-			if v, err := d.next(&escape); err != nil {
+			if v, err := d.next(); err != nil {
 				return err
 			} else {
 				value = v.(V)
@@ -291,14 +392,14 @@ func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
 	}
 }
 
-func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](data []byte, object O) error {
-	if !underlyingIsString[K]() {
+func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](data []byte, object O, option ...DecodeOption) error {
+	if !IsString[K]() {
 		return &json.UnmarshalTypeError{
 			Type: reflect.TypeOf(object).Elem(),
 		}
 	}
 
-	d := newDecoder(bytes.NewReader(data))
+	d := newDecoder(bytes.NewReader(data), option...)
 
 	token, err := d.decoder.Token()
 	if err != nil {
@@ -312,5 +413,5 @@ func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](data []byte, o
 		}
 	}
 
-	return parseIntoObject(d, object, false)
+	return parseIntoObject[K, V](d, object, false)
 }
