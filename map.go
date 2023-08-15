@@ -1,25 +1,27 @@
 package geko
 
-// Map is a map, its kv pair keeps insert order.
-// In JSON Unmarshal and marshal, it will use the order of keys appear in JSON string and output as is.
+// Map is a map, in which the kv pairs will keep order of their insert.
 //
-// When Unmarshal from json into a `Map[string]any`, all json object will store in `Map[string]any`,
-// all json array will store in `List[any]`, instead of normal `map[string]any` and `[]any` from stdlib.
+// In JSON unmarshal, it will use the order of keys appear in JSON string,
+// and marshal output will use the same order.
+//
+// When unmarshal from json into a `Map[string]any`, all json object will be
+// stored in `Map[string]any`, all json array will be stored in `List[any]`,
+// instead of normal `map[string]any` and `[]any`.
+//
+// If you do not sure the outmost item is a object, uses `geko.JSONUnmarshal()`.
 type Map[K comparable, V any] struct {
 	order []K
 	inner map[K]V
-
-	escapeHTML bool
 }
 
-// NewMap creates a new empty ordered map
+// NewMap creates a new empty map.
 func NewMap[K comparable, V any]() *Map[K, V] {
-	return &Map[K, V]{
-		escapeHTML: true, // keep sync with golang std lib
-	}
+	return &Map[K, V]{}
 }
 
-// NewMapWithCapacity likes NewMap, but init the inner container with a capacity to optimize memory allocate.
+// NewMapWithCapacity likes NewMap, but init the inner container with a capacity
+// to optimize memory allocate.
 func NewMapWithCapacity[K comparable, V any](capacity int) *Map[K, V] {
 	kom := NewMap[K, V]()
 	kom.order = make([]K, 0, capacity)
@@ -27,24 +29,28 @@ func NewMapWithCapacity[K comparable, V any](capacity int) *Map[K, V] {
 	return kom
 }
 
-// Get a value by key. the second return value is true if the key exists, otherwise false.
+// Get a value by key. The second return value is true if the key exists,
+// otherwise false.
 func (kom *Map[K, V]) Get(key K) (V, bool) {
 	v, exist := kom.inner[key]
 	return v, exist
 }
 
-// GetOrZeroValue return stored value by key, or te zero value of value type if key not exist.
+// GetOrZeroValue return stored value by key, or the zero value of value type
+// if key not exist.
 func (kom *Map[K, V]) GetOrZeroValue(key K) V {
 	return kom.inner[key]
 }
 
 // GetKeyByIndex get key by it's index in order.
+//
 // You should make sure 0 <= i < Len(), panic if out of bound.
 func (kom *Map[K, V]) GetKeyByIndex(index int) K {
 	return kom.order[index]
 }
 
 // GetByIndex get the key and value by index of key order.
+//
 // You should make sure 0 <= i < Len(), panic if out of bound.
 func (kom *Map[K, V]) GetByIndex(index int) Pair[K, V] {
 	k := kom.GetKeyByIndex(index)
@@ -52,6 +58,7 @@ func (kom *Map[K, V]) GetByIndex(index int) Pair[K, V] {
 }
 
 // GetValueByIndex get the value by index of key order.
+//
 // You should make sure 0 <= i < Len(), panic if out of bound.
 func (kom *Map[K, V]) GetValueByIndex(index int) V {
 	k := kom.GetKeyByIndex(index)
@@ -59,8 +66,9 @@ func (kom *Map[K, V]) GetValueByIndex(index int) V {
 }
 
 // Set a value by key.
-// Called with an already exist key will not change it's order.
-// If you want move it to the end, call Delete before Set.
+//
+// Called with an already exist key won't change it's order.
+// If you want move it to the end, call `Delete` before Set.
 func (kom *Map[K, V]) Set(key K, value V) {
 	if kom.inner == nil {
 		kom.inner = make(map[K]V)
@@ -73,13 +81,18 @@ func (kom *Map[K, V]) Set(key K, value V) {
 	kom.inner[key] = value
 }
 
-func (kom *Map[K, V]) Extend(pairs ...Pair[K, V]) {
+// Append a series of kv pairs into map.
+//
+// The effect is consistent with calling `Set(k, v)` multi times.
+func (kom *Map[K, V]) Append(pairs ...Pair[K, V]) {
 	for _, pair := range pairs {
 		kom.Set(pair.Key, pair.Value)
 	}
 }
 
 // Delete a item by key.
+//
+// Performance: causes O(n) operation, avoid heavy use.
 func (kom *Map[K, V]) Delete(key K) {
 	_, exist := kom.inner[key]
 	if !exist {
@@ -96,6 +109,8 @@ func (kom *Map[K, V]) Delete(key K) {
 
 // Delete a item by it's index in order.
 // You should make sure 0 <= i < Len(), panic if out of bound.
+//
+// Performance: causes O(n) operation, avoid heavy use.
 func (kom *Map[K, V]) DeleteByIndex(index int) {
 	key := kom.order[index]
 	kom.order = append(kom.order[:index], kom.order[index+1:]...)
@@ -113,16 +128,21 @@ func (kom *Map[K, V]) Len() int {
 	return len(kom.inner)
 }
 
-// Keys returns the keys of ordered map, in current order.
-// This will copy all keys, so you can modify it if you wish.
-// If you want iterate over the map, maybe Len + GetByIndex is a better choice.
+// Keys returns a copy of all keys of the map, in current order.
+//
+// Performance: O(n) operation. If you want iterate over the map,
+// maybe Len + GetKeyByIndex is a better choice.
 func (kom *Map[K, V]) Keys() []K {
 	// copy to avoid user modify the order.
-	keys := make([]K, 0, kom.Len())
+	keys := make([]K, kom.Len(), kom.Len())
 	copy(keys, kom.order)
 	return keys
 }
 
+// Values returns a copy of all values of the map, in current order.
+//
+// Performance: O(n) operation. If you want iterate over the map,
+// maybe Len + GetValueByIndex is a better choice.
 func (kom *Map[K, V]) Values() []V {
 	values := make([]V, 0, kom.Len())
 	for i := 0; i < kom.Len(); i++ {
@@ -131,8 +151,10 @@ func (kom *Map[K, V]) Values() []V {
 	return values
 }
 
-// ToPairs gives you all data the map stored as a list of pair, in current order.
-// Do not use this to iterate the map, use GetByIndex instead.
+// Pairs gives you all data the map stored as a list of pair, in current order.
+//
+// Performance: O(n) operation. If you want iterate over the map,
+// maybe Len + GetByIndex is a better choice.
 func (kom *Map[K, V]) Pairs() *PairList[K, V] {
 	pairs := NewPairListWithCapacity[K, V](kom.Len())
 

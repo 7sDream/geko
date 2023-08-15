@@ -10,8 +10,6 @@ import "sort"
 // all json array will store in `List[any]`, instead of normal `map[string]any` and `[]any` from stdlib.
 type PairList[K comparable, V any] struct {
 	List []Pair[K, V]
-
-	escapeHTML bool
 }
 
 func NewPairList[K comparable, V any]() *PairList[K, V] {
@@ -23,11 +21,9 @@ func NewPairListWithCapacity[K comparable, V any](capacity int) *PairList[K, V] 
 }
 
 func NewPairListFrom[K comparable, V any](list []Pair[K, V]) *PairList[K, V] {
-	pairs := &PairList[K, V]{
-		escapeHTML: true,
+	return &PairList[K, V]{
+		List: list,
 	}
-	pairs.List = list
-	return pairs
 }
 
 func (kopl *PairList[K, V]) Get(key K) []V {
@@ -105,7 +101,7 @@ func (kopl *PairList[K, V]) Values() []V {
 
 func (kopl *PairList[K, V]) ToMap() *Map[K, V] {
 	kom := NewMap[K, V]()
-	kom.Extend(kopl.List...)
+	kom.Append(kopl.List...)
 	return kom
 }
 

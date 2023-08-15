@@ -38,9 +38,8 @@ func TestJSONUnmarshal(t *testing.T) {
 }
 
 func TestMapUnmarshal(t *testing.T) {
-	type myString string
 	data := `{"two":2,"one":1,"three":3}`
-	kom := geko.NewMap[myString, int]()
+	kom := geko.NewMap[string, int]()
 	if err := json.Unmarshal([]byte(data), kom); err != nil {
 		t.Fatalf("Error: %s", err.Error())
 	}

@@ -264,7 +264,7 @@ func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
 		if valueIsAny { // if v is any, we parse it into our json value types
 			if v, err := d.next(); err != nil {
 				return err
-			} else {
+			} else if v != nil {
 				value = v.(V)
 			}
 		} else { // otherwise V is a real type, we can let std lib parsing it for us
@@ -285,7 +285,8 @@ func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](
 ) error {
 	if !IsString[K]() {
 		return &json.UnmarshalTypeError{
-			Type: reflect.TypeOf(object).Elem(),
+			Value: "any value",
+			Type:  reflect.TypeOf(object).Elem(),
 		}
 	}
 
