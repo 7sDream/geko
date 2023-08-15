@@ -25,12 +25,20 @@ func NewListWithCapacity[T any](capacity int) *List[T] {
 	return NewListFrom[T](make([]T, 0, capacity))
 }
 
-func (ko *List[T]) Get(i int) T {
-	return ko.List[i]
+func (ko *List[T]) Get(index int) T {
+	return ko.List[index]
+}
+
+func (ko *List[T]) Set(index int, value T) {
+	ko.List[index] = value
 }
 
 func (ko *List[T]) Append(value ...T) {
 	ko.List = append(ko.List, value...)
+}
+
+func (ko *List[T]) Delete(index int) {
+	ko.List = append(ko.List[:index], ko.List[index+1:]...)
 }
 
 func (ko *List[T]) Len() int {

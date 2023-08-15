@@ -1,21 +1,31 @@
 package geko_test
 
 import (
+	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 
 	"github.com/7sDream/geko"
 )
 
 func TestJSONMarshal(t *testing.T) {
-	kom := geko.NewMap[string, any]()
-	kom.Set("html", "<.+&>")
-
-	data, err := geko.JSONMarshal(kom, geko.EscapeHTML(false))
-	if err != nil {
-		t.Fatalf("Error: %s", err.Error())
+	type A struct {
+		S string
+		M *geko.Map[string, any]
 	}
-	t.Logf("marshal result: %s", string(data))
+
+	a := &A{}
+	a.S = "hello<>"
+	a.M = geko.NewMap[string, any]()
+	a.M.Set("b", "Better<>")
+
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	geko.SetEscapeHTML(false)
+	enc.Encode(a)
+	t.Logf("marshal result: %s", strings.TrimSpace(string(buf.Bytes())))
 }
 
 func TestJSONUnmarshal(t *testing.T) {

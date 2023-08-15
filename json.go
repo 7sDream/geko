@@ -8,117 +8,20 @@ import (
 	"unsafe"
 )
 
-// ===== Encoder =====
+var globalEscapeHTML bool
 
-// JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON object and array.
+// EscapeHTML returns current value of global escape html option.
+func EscapeHTML() bool {
+	return globalEscapeHTML
+}
+
+// SetEscapeHTML sets the global escape html option.
 //
-// So the returned value can be:
-// bool, float64/json.Number, string, nil, Map[string]any/PairList[string]any, List[any].
+// Due to the design of `json.Marshaler` interface is `MarshalJSON() ([]byte, error)`, a custom type have no way to get options set into `json.Encoder`, like `EscapeHTML`, when marshal itself.
 //
-// The `any` value in the above container can only be the above type, recursive.
-func JSONMarshal(v any, option ...EncodeOption) ([]byte, error) {
-	return nil, newEncoder(option...).encode(v)
-}
-
-type encoderOptions struct {
-	escapeHTML           bool
-	indentPrefix, indent string
-}
-
-type EncodeOption func(opts *encoderOptions)
-
-func EscapeHTML(v bool) EncodeOption {
-	return func(opts *encoderOptions) {
-		opts.escapeHTML = v
-	}
-}
-
-func WithIndent(prefix string, indent string) EncodeOption {
-	return func(opts *encoderOptions) {
-		opts.indentPrefix = prefix
-		opts.indent = indent
-	}
-}
-
-type encoder struct {
-	buf     bytes.Buffer
-	encoder *json.Encoder
-	opts    encoderOptions
-}
-
-func newEncoder(option ...EncodeOption) *encoder {
-	encoder := &encoder{}
-
-	for _, opt := range option {
-		opt(&encoder.opts)
-	}
-
-	return encoder
-}
-
-type jsonMarshalerExt interface {
-	jsonMarshalExt(e *encoder) ([]byte, error)
-}
-
-func (e *encoder) encode(v any) error {
-	e.encoder = json.NewEncoder(&e.buf)
-	e.encoder.SetEscapeHTML(e.opts.escapeHTML)
-	e.encoder.SetIndent(e.opts.indentPrefix, e.opts.indent)
-
-	if ext, ok := v.(jsonMarshalerExt); ok {
-		return ext.jsonMarshalExt(e)
-	}
-
-	switch v.(type) {
-	case bool, float64, json.Number, string, nil:
-		{
-			return e.encoder.Encode(v)
-		}
-	case map[string]any:
-		{
-			// TODO
-		}
-	case []any:
-		{
-			// TODO
-		}
-	}
-
-	return nil
-}
-
-func encodeObject[K comparable, V any, O jsonObjectLike[K, V]](
-	e *encoder, object jsonObjectLike[string, any],
-) error {
-	if !IsString[K]() {
-		return &json.UnsupportedTypeError{
-			Type: reflect.TypeOf(object),
-		}
-	}
-
-	e.buf.WriteByte('{')
-
-	for i := 0; i < object.Len(); i++ {
-		if i > 0 {
-			e.buf.WriteByte(',')
-		}
-
-		pair := object.GetByIndex(i)
-
-		if err := e.encode(pair.Key); err != nil {
-			return err
-		}
-
-		e.buf.WriteByte(':')
-
-		if err := e.encode(pair.Value); err != nil {
-			return err
-		}
-	}
-
-	e.buf.WriteByte('}')
-
-	return nil
+// So Map/List/PairList type will (actually, can only) ignore the options in `json.Encoder`, but uses a global option defined in this module instead. I recommend you set this option at begin or init function of your project as your needs.
+func SetEscapeHTML(escape bool) {
+	globalEscapeHTML = escape
 }
 
 // ===== Decoder =====
@@ -255,9 +158,10 @@ type jsonArrayLike[T any] interface {
 
 func marshalArray[T any, A jsonArrayLike[T]](array A) ([]byte, error) {
 	var data bytes.Buffer
-	encoder := json.NewEncoder(&data)
+	enc := json.NewEncoder(&data)
+	enc.SetEscapeHTML(globalEscapeHTML)
 
-	err := encoder.Encode(*array.innerSlice())
+	err := enc.Encode(*array.innerSlice())
 	return data.Bytes(), err
 }
 
@@ -325,6 +229,7 @@ func marshalObject[K comparable, V any, O jsonObjectLike[K, V]](object O) ([]byt
 
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(globalEscapeHTML)
 
 	buf.WriteByte('{')
 
@@ -392,7 +297,9 @@ func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
 	}
 }
 
-func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](data []byte, object O, option ...DecodeOption) error {
+func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](
+	data []byte, object O, option ...DecodeOption,
+) error {
 	if !IsString[K]() {
 		return &json.UnmarshalTypeError{
 			Type: reflect.TypeOf(object).Elem(),
