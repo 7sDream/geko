@@ -8,22 +8,6 @@ import (
 	"unsafe"
 )
 
-var globalEscapeHTML bool
-
-// EscapeHTML returns current value of global escape html option.
-func EscapeHTML() bool {
-	return globalEscapeHTML
-}
-
-// SetEscapeHTML sets the global escape html option.
-//
-// Due to the design of `json.Marshaler` interface is `MarshalJSON() ([]byte, error)`, a custom type have no way to get options set into `json.Encoder`, like `EscapeHTML`, when marshal itself.
-//
-// So Map/List/PairList type will (actually, can only) ignore the options in `json.Encoder`, but uses a global option defined in this module instead. I recommend you set this option at begin or init function of your project as your needs.
-func SetEscapeHTML(escape bool) {
-	globalEscapeHTML = escape
-}
-
 // ===== Decoder =====
 
 // JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON object and array.
@@ -159,8 +143,7 @@ type jsonArrayLike[T any] interface {
 func marshalArray[T any, A jsonArrayLike[T]](array A) ([]byte, error) {
 	var data bytes.Buffer
 	enc := json.NewEncoder(&data)
-	enc.SetEscapeHTML(globalEscapeHTML)
-
+	enc.SetEscapeHTML(false)
 	err := enc.Encode(*array.innerSlice())
 	return data.Bytes(), err
 }
@@ -229,7 +212,7 @@ func marshalObject[K comparable, V any, O jsonObjectLike[K, V]](object O) ([]byt
 
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(globalEscapeHTML)
+	enc.SetEscapeHTML(false)
 
 	buf.WriteByte('{')
 

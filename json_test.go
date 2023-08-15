@@ -1,7 +1,6 @@
 package geko_test
 
 import (
-	"bytes"
 	"encoding/json"
 	"strings"
 	"testing"
@@ -20,12 +19,8 @@ func TestJSONMarshal(t *testing.T) {
 	a.M = geko.NewMap[string, any]()
 	a.M.Set("b", "Better<>")
 
-	var buf bytes.Buffer
-	enc := json.NewEncoder(&buf)
-	enc.SetEscapeHTML(false)
-	geko.SetEscapeHTML(false)
-	enc.Encode(a)
-	t.Logf("marshal result: %s", strings.TrimSpace(string(buf.Bytes())))
+	data, _ := json.Marshal(a)
+	t.Logf("marshal result: %s", strings.TrimSpace(string(data)))
 }
 
 func TestJSONUnmarshal(t *testing.T) {

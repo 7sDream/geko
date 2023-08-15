@@ -65,14 +65,6 @@ func main() {
 // TODO
 ```
 
-## Known Issue
-
-Due to the design of `json.Marshaler` interface is `MarshalJSON() ([]byte, error)`, a custom type have no way to get options set into `json.Encoder`, like `EscapeHTML`, when marshal itself.
-
-So Map/List/PairList type will (actually, can only) ignore the options in `json.Encoder`, but uses a global option defined in this module instead. I recommend you set this option at begin or init function of your project as your needs.  
-
-See `geko.EscapeHTML()` and `geko.SetEscapeHTML()` for detail.
-
 ## TODO
 
 - Doc/Comments.
