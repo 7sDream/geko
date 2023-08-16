@@ -2,8 +2,9 @@ package geko
 
 // Wrapper type for a normal slice.
 //
-// Unmarshal from JSON into a *List[any] will use *[Map][string, any] from this
-// package to store JSON object, instead of normal map[string]any from std lib.
+// Unmarshal from JSON into a *[List][any] will use *[Map][string, any] from
+// this package to store JSON object, use *[List][any] to store JSON array,
+// instead of normal map[string]any and []any from std lib.
 type List[T any] struct {
 	List []T
 }
