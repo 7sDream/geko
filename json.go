@@ -236,7 +236,7 @@ func marshalObject[K comparable, V any, O jsonObject[K, V]](object O) ([]byte, e
 
 	buf.WriteByte('{')
 
-	for i := 0; i < object.Len(); i++ {
+	for i, length := 0, object.Len(); i < length; i++ {
 		if i > 0 {
 			buf.WriteByte(',')
 		}

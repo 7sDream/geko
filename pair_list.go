@@ -171,7 +171,7 @@ func (pl *PairList[K, V]) Len() int {
 // Performance: O(n).
 func (pl *PairList[K, V]) Keys() []K {
 	keys := make([]K, 0, pl.Len())
-	for i := 0; i < pl.Len(); i++ {
+	for i, length := 0, pl.Len(); i < length; i++ {
 		keys = append(keys, pl.GetKeyByIndex(i))
 	}
 	return keys
@@ -182,7 +182,7 @@ func (pl *PairList[K, V]) Keys() []K {
 // Performance: O(n).
 func (pl *PairList[K, V]) Values() []V {
 	values := make([]V, 0, pl.Len())
-	for i := 0; i < pl.Len(); i++ {
+	for i, length := 0, pl.Len(); i < length; i++ {
 		values = append(values, pl.GetValueByIndex(i))
 	}
 	return values

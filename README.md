@@ -25,7 +25,7 @@ m.Set("three", 2)
 m.Set("two", 2)
 m.Set("three", 3) // do not change order of key "three", it will stay ahead of "two".
 
-for i := 0; i < m.Len(); i++ {
+for i, length := 0, m.Len(); i < length; i++ {
     pair := m.GetByIndex(i)
     fmt.Printf("%s: %d\n", pair.Key, pair.Value)
 }

@@ -246,10 +246,13 @@ func (m *Map[K, V]) Keys() []K {
 // Performance: O(n) operation. If you want iterate over the map,
 // maybe [Map.Len] + [Map.GetValueByIndex] is a better choice.
 func (m *Map[K, V]) Values() []V {
-	values := make([]V, 0, m.Len())
-	for i := 0; i < m.Len(); i++ {
+	length := m.Len()
+
+	values := make([]V, 0, length)
+	for i := 0; i < length; i++ {
 		values = append(values, m.GetValueByIndex(i))
 	}
+
 	return values
 }
 
@@ -258,9 +261,11 @@ func (m *Map[K, V]) Values() []V {
 // Performance: O(n) operation. If you want iterate over the map,
 // maybe [Map.Len] + [Map.GetByIndex] is a better choice.
 func (m *Map[K, V]) Pairs() *PairList[K, V] {
-	pairs := NewPairListWithCapacity[K, V](m.Len())
+	length := m.Len()
 
-	for i := 0; i < m.Len(); i++ {
+	pairs := NewPairListWithCapacity[K, V](length)
+
+	for i := 0; i < length; i++ {
 		pairs.List = append(pairs.List, m.GetByIndex(i))
 	}
 
@@ -273,7 +278,7 @@ func (m *Map[K, V]) Sort(lessFunc PairLessFunc[K, V]) {
 
 	pairs.Sort(lessFunc)
 
-	for i := 0; i < m.Len(); i++ {
+	for i, length := 0, m.Len(); i < length; i++ {
 		m.order[i] = pairs.List[i].Key
 	}
 }
