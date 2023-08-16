@@ -53,8 +53,8 @@ fmt.Printf("marshal result: %s", string(data))
 
 ## TODO
 
-- Doc/Comments.
 - Tests.
+- Package overview document and README.
 
 ## LICENSE
 
