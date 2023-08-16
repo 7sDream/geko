@@ -200,10 +200,12 @@ func (m *Map[K, V]) Delete(key K) {
 
 	for i, k := range m.order {
 		if k == key {
-			m.DeleteByIndex(i)
-			return
+			m.order = append(m.order[:i], m.order[i+1:]...)
+			break
 		}
 	}
+
+	delete(m.inner, key)
 }
 
 // Delete a item by it's index in order.

@@ -121,7 +121,7 @@ func (pl *PairList[K, V]) Append(pairs ...Pair[K, V]) {
 
 func (pl *PairList[K, V]) Delete(key K) {
 	pl.Filter(func(p *Pair[K, V]) bool {
-		return p.Key == key
+		return p.Key != key
 	})
 }
 
