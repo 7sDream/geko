@@ -28,42 +28,42 @@ func NewListWithCapacity[T any](capacity int) *List[T] {
 }
 
 // Get value at index.
-func (kol *List[T]) Get(index int) T {
-	return kol.List[index]
+func (l *List[T]) Get(index int) T {
+	return l.List[index]
 }
 
 // Set value at index.
-func (kol *List[T]) Set(index int, value T) {
-	kol.List[index] = value
+func (l *List[T]) Set(index int, value T) {
+	l.List[index] = value
 }
 
 // Append values into list.
-func (kol *List[T]) Append(value ...T) {
-	kol.List = append(kol.List, value...)
+func (l *List[T]) Append(value ...T) {
+	l.List = append(l.List, value...)
 }
 
 // Delete value at index.
-func (kol *List[T]) Delete(index int) {
-	kol.List = append(kol.List[:index], kol.List[index+1:]...)
+func (l *List[T]) Delete(index int) {
+	l.List = append(l.List[:index], l.List[index+1:]...)
 }
 
 // Len give length of the list.
-func (kol *List[T]) Len() int {
-	return len(kol.List)
+func (l *List[T]) Len() int {
+	return len(l.List)
 }
 
-func (kol *List[T]) innerSlice() *[]T {
-	return &kol.List
+func (l *List[T]) innerSlice() *[]T {
+	return &l.List
 }
 
 // MarshalJSON implements [json.Marshaler] interface.
 // You should not call this directly, use [json.Marshal] instead.
-func (kol List[T]) MarshalJSON() ([]byte, error) {
-	return marshalArray[T](&kol)
+func (l List[T]) MarshalJSON() ([]byte, error) {
+	return marshalArray[T](&l)
 }
 
 // UnmarshalJSON implements [json.Unmarshaler] interface.
 // You should not call this directly, use [json.Marshal] instead.
-func (kol *List[T]) UnmarshalJSON(data []byte) error {
-	return unmarshalArray[T](data, kol)
+func (l *List[T]) UnmarshalJSON(data []byte) error {
+	return unmarshalArray[T](data, l)
 }

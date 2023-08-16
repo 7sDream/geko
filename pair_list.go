@@ -115,83 +115,83 @@ func (pl *PairList[K, V]) Add(key K, value V) {
 	pl.List = append(pl.List, Pair[K, V]{key, value})
 }
 
-func (kopl *PairList[K, V]) Append(pairs ...Pair[K, V]) {
-	kopl.List = append(kopl.List, pairs...)
+func (pl *PairList[K, V]) Append(pairs ...Pair[K, V]) {
+	pl.List = append(pl.List, pairs...)
 }
 
-func (kopl *PairList[K, V]) Delete(key K) {
-	kopl.Filter(func(p *Pair[K, V]) bool {
+func (pl *PairList[K, V]) Delete(key K) {
+	pl.Filter(func(p *Pair[K, V]) bool {
 		return p.Key == key
 	})
 }
 
-func (kopl *PairList[K, V]) DeleteByIndex(index int) {
-	kopl.List = append(kopl.List[:index], kopl.List[index+1:]...)
+func (pl *PairList[K, V]) DeleteByIndex(index int) {
+	pl.List = append(pl.List[:index], pl.List[index+1:]...)
 }
 
-func (kopl *PairList[K, V]) Clear() {
-	kopl.List = nil
+func (pl *PairList[K, V]) Clear() {
+	pl.List = nil
 }
 
-func (kopl *PairList[K, V]) Len() int {
-	return len(kopl.List)
+func (pl *PairList[K, V]) Len() int {
+	return len(pl.List)
 }
 
-func (kopl *PairList[K, V]) Keys() []K {
-	keys := make([]K, 0, kopl.Len())
-	for i := 0; i < kopl.Len(); i++ {
-		keys = append(keys, kopl.GetKeyByIndex(i))
+func (pl *PairList[K, V]) Keys() []K {
+	keys := make([]K, 0, pl.Len())
+	for i := 0; i < pl.Len(); i++ {
+		keys = append(keys, pl.GetKeyByIndex(i))
 	}
 	return keys
 }
 
-func (kopl *PairList[K, V]) Values() []V {
-	values := make([]V, 0, kopl.Len())
-	for i := 0; i < kopl.Len(); i++ {
-		values = append(values, kopl.GetValueByIndex(i))
+func (pl *PairList[K, V]) Values() []V {
+	values := make([]V, 0, pl.Len())
+	for i := 0; i < pl.Len(); i++ {
+		values = append(values, pl.GetValueByIndex(i))
 	}
 	return values
 }
 
-func (kopl *PairList[K, V]) ToMap(strategy DuplicateKeyStrategy) *Map[K, V] {
-	kom := NewMap[K, V]()
-	kom.SetDuplicateKeyStrategy(strategy)
-	kom.Append(kopl.List...)
-	return kom
+func (pl *PairList[K, V]) ToMap(strategy DuplicateKeyStrategy) *Map[K, V] {
+	m := NewMap[K, V]()
+	m.SetDuplicateKeyStrategy(strategy)
+	m.Append(pl.List...)
+	return m
 }
 
-func (kopl *PairList[K, V]) Dedup(strategy DuplicateKeyStrategy) {
-	kopl.List = kopl.ToMap(strategy).Pairs().List
+func (pl *PairList[K, V]) Dedup(strategy DuplicateKeyStrategy) {
+	pl.List = pl.ToMap(strategy).Pairs().List
 }
 
-func (kopl *PairList[K, V]) Sort(lessFunc PairLessFunc[K, V]) {
-	sort.SliceStable(kopl.List, func(i, j int) bool {
-		return lessFunc(&kopl.List[i], &kopl.List[j])
+func (pl *PairList[K, V]) Sort(lessFunc PairLessFunc[K, V]) {
+	sort.SliceStable(pl.List, func(i, j int) bool {
+		return lessFunc(&pl.List[i], &pl.List[j])
 	})
 }
 
 // Filter remove all item which make pred func return false.
 //
 // More efficient then `GetByIndex` + `DeleteByIndex` in a loop.
-func (kopl *PairList[K, V]) Filter(pred PairFilterFunc[K, V]) {
+func (pl *PairList[K, V]) Filter(pred PairFilterFunc[K, V]) {
 	n := 0
-	for i, length := 0, kopl.Len(); i < length; i++ {
-		if pred(&kopl.List[i]) {
-			kopl.List[n] = kopl.List[i]
+	for i, length := 0, pl.Len(); i < length; i++ {
+		if pred(&pl.List[i]) {
+			pl.List[n] = pl.List[i]
 			n++
 		}
 	}
-	kopl.List = kopl.List[:n]
+	pl.List = pl.List[:n]
 }
 
 // MarshalJSON implements json.Marshaler interface.
-// You should not call this directly, use json.Marshal(kom) instead.
-func (kom PairList[K, V]) MarshalJSON() ([]byte, error) {
-	return marshalObject[K, V](&kom)
+// You should not call this directly, use json.Marshal(m) instead.
+func (m PairList[K, V]) MarshalJSON() ([]byte, error) {
+	return marshalObject[K, V](&m)
 }
 
 // UnmarshalJSON implements json.Unmarshaler interface.
-// You shouldn't call this directly, use json.Unmarshal(kom) instead.
-func (kom *PairList[K, V]) UnmarshalJSON(data []byte) error {
-	return unmarshalObject[K, V](data, kom, UsePairList(true))
+// You shouldn't call this directly, use json.Unmarshal(m) instead.
+func (m *PairList[K, V]) UnmarshalJSON(data []byte) error {
+	return unmarshalObject[K, V](data, m, UsePairList(true))
 }

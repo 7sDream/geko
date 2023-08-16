@@ -8,9 +8,9 @@ import (
 )
 
 func TestPairList_New(t *testing.T) {
-	kol := geko.NewPairList[string, int]()
+	l := geko.NewPairList[string, int]()
 
-	if kol.List != nil {
+	if l.List != nil {
 		t.Fatalf("NewPairList inner slice is not nil")
 	}
 
@@ -19,17 +19,17 @@ func TestPairList_New(t *testing.T) {
 		{"two", 2},
 		{"three", 3},
 	}
-	kol2 := geko.NewPairListFrom(list)
+	l2 := geko.NewPairListFrom(list)
 
-	if !reflect.DeepEqual(kol2.List, list) {
+	if !reflect.DeepEqual(l2.List, list) {
 		t.Fatalf("NewPairList doesn't store origin slice")
 	}
 }
 
 func TestPairList_NewWithCapacity(t *testing.T) {
-	kol := geko.NewPairListWithCapacity[string, int](12)
+	l := geko.NewPairListWithCapacity[string, int](12)
 
-	if cap(kol.List) != 12 {
+	if cap(l.List) != 12 {
 		t.Fatalf("NewPairListWithCapacity inner slice does not have correct capacity")
 	}
 }

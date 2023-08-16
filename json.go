@@ -130,9 +130,9 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 				if d.opts.usePairList {
 					object = NewPairList[string, any]()
 				} else {
-					kom := NewMap[string, any]()
-					kom.SetDuplicateKeyStrategy(d.opts.duplicateKeyStrategy)
-					object = kom
+					m := NewMap[string, any]()
+					m.SetDuplicateKeyStrategy(d.opts.duplicateKeyStrategy)
+					object = m
 				}
 				if err := parseIntoObject[string, any](d, object, true); err != nil {
 					return nil, err
@@ -141,11 +141,11 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 			}
 		case '[':
 			{
-				kol := NewList[any]()
-				if err := parseIntoArray[any](d, kol); err != nil {
+				l := NewList[any]()
+				if err := parseIntoArray[any](d, l); err != nil {
 					return nil, err
 				}
-				value = kol
+				value = l
 			}
 		}
 	}

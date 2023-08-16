@@ -19,18 +19,18 @@ And of cause, when marshal back to JSON string, it will use the order too.
 ### Map
 
 ```golang
-kom := geko.NewMap[string, int]()
-kom.Set("one", 1)
-kom.Set("three", 2)
-kom.Set("two", 2)
-kom.Set("three", 3) // do not change order of key "three", it will stay ahead of "two".
+m := geko.NewMap[string, int]()
+m.Set("one", 1)
+m.Set("three", 2)
+m.Set("two", 2)
+m.Set("three", 3) // do not change order of key "three", it will stay ahead of "two".
 
-for i := 0; i < kom.Len(); i++ {
-    pair := kom.GetByIndex(i)
+for i := 0; i < m.Len(); i++ {
+    pair := m.GetByIndex(i)
     fmt.Printf("%s: %d\n", pair.Key, pair.Value)
 }
 
-data, _ := json.Marshal(kom)
+data, _ := json.Marshal(m)
 fmt.Printf("marshal result: %s", string(data))
 // Output:
 // one: 1
