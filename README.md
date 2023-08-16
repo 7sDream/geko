@@ -53,8 +53,6 @@ fmt.Printf("marshal result: %s", string(data))
 
 ## TODO
 
-- Duplicate key strategy when unmarshal.
-- `Filter` API.
 - Doc/Comments.
 - Tests.
 

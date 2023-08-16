@@ -10,32 +10,49 @@ import (
 
 // ===== Decoder =====
 
-// JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON object and array.
+// JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON
+// object and array.
 //
 // So the returned value can be:
-// bool, float64/json.Number, string, nil, Map[string]any/PairList[string]any, List[any].
+// bool, float64/[json.Number], string, nil,
+// *[Map][string, any]/*[PairList][string, any], *[List][any].
 //
-// The `any` value in the above container can only be the above type, recursive.
+// The any value in the above container can only be the above type, recursive.
 func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 	return newDecoder(bytes.NewReader(data), option...).decode()
 }
 
 type decodeOptions struct {
-	useNumber   bool
-	usePairList bool
+	useNumber            bool
+	usePairList          bool
+	duplicateKeyStrategy DuplicateKeyStrategy
 }
 
+// DecodeOption is option type for [JSONUnmarshal].
 type DecodeOption func(opts *decodeOptions)
 
+// UseNumber option will make [JSONUnmarshal] uses [json.Number] to store
+// JSON number, instead of float64.
 func UseNumber(v bool) DecodeOption {
 	return func(opts *decodeOptions) {
 		opts.useNumber = v
 	}
 }
 
+// UsePairList option will make [JSONUnmarshal] uses *[PairList][string, any] to
+// store JSON object, instead of *[Map][string, any].
 func UsePairList(v bool) DecodeOption {
 	return func(opts *decodeOptions) {
 		opts.usePairList = v
+	}
+}
+
+// OnDuplicateKey set the strategy when there are duplicate key in JSON object.
+//
+// See document of [DuplicateKeyStrategy] and its enum value for details
+func OnDuplicateKey(strategy DuplicateKeyStrategy) DecodeOption {
+	return func(opts *decodeOptions) {
+		opts.duplicateKeyStrategy = strategy
 	}
 }
 
@@ -113,7 +130,9 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 				if d.opts.usePairList {
 					object = NewPairList[string, any]()
 				} else {
-					object = NewMap[string, any]()
+					kom := NewMap[string, any]()
+					kom.SetDuplicateKeyStrategy(d.opts.duplicateKeyStrategy)
+					object = kom
 				}
 				if err := parseIntoObject[string, any](d, object, true); err != nil {
 					return nil, err

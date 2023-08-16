@@ -2,12 +2,10 @@ package geko
 
 // Wrapper type for a normal slice.
 //
-// Unmarshal from json into a List[any] will use our `Map[string]any` to store json object,
-// instead of normal `map[string]any` from stdlib.
+// Unmarshal from JSON into a *List[any] will use our `*Map[string, any]` to
+// store JSON object, instead of normal `map[string]any` from std lib.
 type List[T any] struct {
 	List []T
-
-	escapeHTML bool
 }
 
 func NewList[T any]() *List[T] {
@@ -16,8 +14,7 @@ func NewList[T any]() *List[T] {
 
 func NewListFrom[T any](list []T) *List[T] {
 	return &List[T]{
-		List:       list,
-		escapeHTML: true,
+		List: list,
 	}
 }
 

@@ -2,12 +2,13 @@ package geko
 
 import "sort"
 
-// Wrapper type for []Pair[K, V], it can be unmarshal/unmarshal from/to a json **object**.
-// In JSON Unmarshal and marshal, it will use the order of keys appear in JSON string and output as is.
-// It will save all items even if their Key is duplicated.
+// Wrapper type for []Pair[K, V], it can be unmarshal/marshal from/to a JSON
+// **object**. It will use the order of keys appear in JSON string and output
+// as is. It saves all items even if their key is duplicated.
 //
-// When Unmarshal from json into a `ParList[string, any]`, all json object will store in `ParList[string, any]`,
-// all json array will store in `List[any]`, instead of normal `map[string]any` and `[]any` from stdlib.
+// When Unmarshal from json into a `ParList[string, any]`, all inner JSON object
+// will be stored in `*ParList[string, any]`, all JSON array will be stored in
+// `*List[any]`, instead of normal `map[string]any` and `[]any` from std lib.
 type PairList[K comparable, V any] struct {
 	List []Pair[K, V]
 }
@@ -99,16 +100,35 @@ func (kopl *PairList[K, V]) Values() []V {
 	return values
 }
 
-func (kopl *PairList[K, V]) ToMap() *Map[K, V] {
+func (kopl *PairList[K, V]) ToMap(strategy DuplicateKeyStrategy) *Map[K, V] {
 	kom := NewMap[K, V]()
+	kom.SetDuplicateKeyStrategy(strategy)
 	kom.Append(kopl.List...)
 	return kom
+}
+
+func (kopl *PairList[K, V]) Dedup(strategy DuplicateKeyStrategy) {
+	kopl.List = kopl.ToMap(strategy).Pairs().List
 }
 
 func (kopl *PairList[K, V]) Sort(lessFunc PairLessFunc[K, V]) {
 	sort.SliceStable(kopl.List, func(i, j int) bool {
 		return lessFunc(&kopl.List[i], &kopl.List[j])
 	})
+}
+
+// Filter remove all item which make pred func return false.
+//
+// More efficient then `GetByIndex` + `DeleteByIndex` in a loop.
+func (kopl *PairList[K, V]) Filter(pred PairFilterFunc[K, V]) {
+	n := 0
+	for i, length := 0, kopl.Len(); i < length; i++ {
+		if pred(&kopl.List[i]) {
+			kopl.List[n] = kopl.List[i]
+			n++
+		}
+	}
+	kopl.List = kopl.List[:n]
 }
 
 // MarshalJSON implements json.Marshaler interface.

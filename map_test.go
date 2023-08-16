@@ -175,6 +175,51 @@ func TestMap_Set(t *testing.T) {
 	}
 }
 
+func TestMap_Set_Strategy(t *testing.T) {
+	cases := []struct {
+		strategy       geko.DuplicateKeyStrategy
+		exceptedKeys   []string
+		exceptedValues []int
+	}{
+		{geko.UpdateValueKeepOrder, []string{"a", "b"}, []int{3, 2}},
+		{geko.UpdateValueUpdateOrder, []string{"b", "a"}, []int{2, 3}},
+		{geko.KeepValueUpdateOrder, []string{"b", "a"}, []int{2, 1}},
+		{geko.Ignore, []string{"a", "b"}, []int{1, 2}},
+	}
+
+	for _, tt := range cases {
+		kom := geko.NewMap[string, int]()
+		kom.SetDuplicateKeyStrategy(tt.strategy)
+		kom.Set("a", 1)
+		kom.Set("b", 2)
+		kom.Set("a", 3)
+
+		if strategy := kom.DuplicateKeyStrategy(); strategy != tt.strategy {
+			t.Fatalf(
+				"Excepted strategy %#v, got %#v",
+				tt.strategy, strategy,
+			)
+		}
+
+		keys := kom.Keys()
+		values := kom.Values()
+
+		if !reflect.DeepEqual(keys, tt.exceptedKeys) {
+			t.Fatalf(
+				"for strategy %#v, Excepted keys %#v, got %#v",
+				tt.strategy, tt.exceptedKeys, keys,
+			)
+		}
+
+		if !reflect.DeepEqual(values, tt.exceptedValues) {
+			t.Fatalf(
+				"for strategy %#v, Excepted values %#v, got %#v",
+				tt.strategy, tt.exceptedValues, values,
+			)
+		}
+	}
+}
+
 func TestMap_Append(t *testing.T) {
 	kom := geko.NewMap[string, int]()
 	kom.Append([]geko.Pair[string, int]{
@@ -409,6 +454,29 @@ func TestMap_Sort(t *testing.T) {
 
 	if !reflect.DeepEqual(pairs, exceptedPairs) {
 		t.Fatalf("Sort result excepted %#v, got %#v", exceptedPairs, pairs)
+	}
+}
+
+func TestMap_Filter(t *testing.T) {
+	kom := geko.NewMap[int, string]()
+	kom.Set(1, "one")
+	kom.Set(2, "two")
+	kom.Set(3, "three")
+	kom.Set(4, "four")
+
+	kom.Filter(func(p *geko.Pair[int, string]) bool {
+		return p.Key%2 == 0
+	})
+
+	exceptedPairs := []geko.Pair[int, string]{
+		{2, "two"},
+		{4, "four"},
+	}
+
+	pairs := kom.Pairs().List
+
+	if !reflect.DeepEqual(pairs, exceptedPairs) {
+		t.Fatalf("Filter result excepted %#v, got %#v", exceptedPairs, pairs)
 	}
 }
 
