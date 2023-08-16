@@ -126,7 +126,7 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 		switch v {
 		case '{':
 			{
-				var object jsonObjectLike[string, any]
+				var object jsonObject[string, any]
 				if d.opts.usePairList {
 					object = NewPairList[string, any]()
 				} else {
@@ -155,11 +155,11 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 
 // Array
 
-type jsonArrayLike[T any] interface {
+type jsonArray[T any] interface {
 	innerSlice() *[]T
 }
 
-func marshalArray[T any, A jsonArrayLike[T]](array A) ([]byte, error) {
+func marshalArray[T any, A jsonArray[T]](array A) ([]byte, error) {
 	var data bytes.Buffer
 	enc := json.NewEncoder(&data)
 	enc.SetEscapeHTML(false)
@@ -167,7 +167,7 @@ func marshalArray[T any, A jsonArrayLike[T]](array A) ([]byte, error) {
 	return data.Bytes(), err
 }
 
-func parseIntoArray[T any, A jsonArrayLike[T]](d *decoder, array A) error {
+func parseIntoArray[T any, A jsonArray[T]](d *decoder, array A) error {
 	for {
 		token, err := d.decoder.Token()
 		if err != nil {
@@ -192,7 +192,7 @@ func parseIntoArray[T any, A jsonArrayLike[T]](d *decoder, array A) error {
 	}
 }
 
-func unmarshalArray[T any, A jsonArrayLike[T]](data []byte, array A) error {
+func unmarshalArray[T any, A jsonArray[T]](data []byte, array A) error {
 	if !isAny[T]() {
 		return json.Unmarshal(data, array.innerSlice())
 	}
@@ -216,13 +216,13 @@ func unmarshalArray[T any, A jsonArrayLike[T]](data []byte, array A) error {
 
 // Object
 
-type jsonObjectLike[K comparable, V any] interface {
+type jsonObject[K comparable, V any] interface {
 	GetByIndex(int) Pair[K, V]
 	Add(K, V)
 	Len() int
 }
 
-func marshalObject[K comparable, V any, O jsonObjectLike[K, V]](object O) ([]byte, error) {
+func marshalObject[K comparable, V any, O jsonObject[K, V]](object O) ([]byte, error) {
 	if !IsString[K]() {
 		return nil, &json.UnsupportedTypeError{
 			Type: reflect.TypeOf(object),
@@ -258,7 +258,7 @@ func marshalObject[K comparable, V any, O jsonObjectLike[K, V]](object O) ([]byt
 	return buf.Bytes(), nil
 }
 
-func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
+func parseIntoObject[K comparable, V any, O jsonObject[K, V]](
 	d *decoder, object O, valueIsAny bool,
 ) error {
 	valueIsAny = valueIsAny || isAny[V]()
@@ -299,7 +299,7 @@ func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
 	}
 }
 
-func unmarshalObject[K comparable, V any, O jsonObjectLike[K, V]](
+func unmarshalObject[K comparable, V any, O jsonObject[K, V]](
 	data []byte, object O, option ...DecodeOption,
 ) error {
 	if !IsString[K]() {
