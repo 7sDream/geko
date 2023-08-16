@@ -147,14 +147,14 @@ func TestMap_GetValueByIndex(t *testing.T) {
 }
 
 func TestMap_Set(t *testing.T) {
-	for _, strategy := range []geko.DuplicateKeyStrategy{
+	for _, strategy := range []geko.DuplicatedKeyStrategy{
 		geko.UpdateValueKeepOrder,
 		geko.UpdateValueUpdateOrder,
 		geko.KeepValueUpdateOrder,
 		geko.Ignore,
 	} {
 		m := geko.NewMap[string, int]()
-		m.SetDuplicateKeyStrategy(strategy)
+		m.SetDuplicatedKeyStrategy(strategy)
 		m.Set("a", 1)
 		m.Set("b", 2)
 		m.Set("b", 3)
@@ -185,7 +185,7 @@ func TestMap_Set(t *testing.T) {
 
 func TestMap_Add(t *testing.T) {
 	cases := []struct {
-		strategy       geko.DuplicateKeyStrategy
+		strategy       geko.DuplicatedKeyStrategy
 		exceptedKeys   []string
 		exceptedValues []int
 	}{
@@ -197,12 +197,12 @@ func TestMap_Add(t *testing.T) {
 
 	for _, tt := range cases {
 		m := geko.NewMap[string, int]()
-		m.SetDuplicateKeyStrategy(tt.strategy)
+		m.SetDuplicatedKeyStrategy(tt.strategy)
 		m.Add("a", 1)
 		m.Add("b", 2)
 		m.Add("a", 3)
 
-		if strategy := m.DuplicateKeyStrategy(); strategy != tt.strategy {
+		if strategy := m.DuplicatedKeyStrategy(); strategy != tt.strategy {
 			t.Fatalf(
 				"Excepted strategy %#v, got %#v",
 				tt.strategy, strategy,

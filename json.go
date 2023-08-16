@@ -23,9 +23,9 @@ func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 }
 
 type decodeOptions struct {
-	useNumber            bool
-	usePairList          bool
-	duplicateKeyStrategy DuplicateKeyStrategy
+	useNumber             bool
+	usePairList           bool
+	duplicatedKeyStrategy DuplicatedKeyStrategy
 }
 
 // DecodeOption is option type for [JSONUnmarshal].
@@ -47,12 +47,13 @@ func UsePairList(v bool) DecodeOption {
 	}
 }
 
-// OnDuplicateKey set the strategy when there are duplicate key in JSON object.
+// OnDuplicatedKey set the strategy when there are duplicated key in JSON
+// object.
 //
-// See document of [DuplicateKeyStrategy] and its enum value for details
-func OnDuplicateKey(strategy DuplicateKeyStrategy) DecodeOption {
+// See document of [DuplicatedKeyStrategy] and its enum value for details
+func OnDuplicatedKey(strategy DuplicatedKeyStrategy) DecodeOption {
 	return func(opts *decodeOptions) {
-		opts.duplicateKeyStrategy = strategy
+		opts.duplicatedKeyStrategy = strategy
 	}
 }
 
@@ -131,7 +132,7 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 					object = NewPairList[string, any]()
 				} else {
 					m := NewMap[string, any]()
-					m.SetDuplicateKeyStrategy(d.opts.duplicateKeyStrategy)
+					m.SetDuplicatedKeyStrategy(d.opts.duplicatedKeyStrategy)
 					object = m
 				}
 				if err := parseIntoObject[string, any](d, object, true); err != nil {
@@ -223,7 +224,7 @@ type jsonObject[K comparable, V any] interface {
 }
 
 func marshalObject[K comparable, V any, O jsonObject[K, V]](object O) ([]byte, error) {
-	if !IsString[K]() {
+	if !isString[K]() {
 		return nil, &json.UnsupportedTypeError{
 			Type: reflect.TypeOf(object),
 		}
@@ -302,7 +303,7 @@ func parseIntoObject[K comparable, V any, O jsonObject[K, V]](
 func unmarshalObject[K comparable, V any, O jsonObject[K, V]](
 	data []byte, object O, option ...DecodeOption,
 ) error {
-	if !IsString[K]() {
+	if !isString[K]() {
 		return &json.UnmarshalTypeError{
 			Value: "any value",
 			Type:  reflect.TypeOf(object).Elem(),

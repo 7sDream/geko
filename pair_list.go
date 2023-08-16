@@ -153,14 +153,14 @@ func (pl *PairList[K, V]) Values() []V {
 	return values
 }
 
-func (pl *PairList[K, V]) ToMap(strategy DuplicateKeyStrategy) *Map[K, V] {
+func (pl *PairList[K, V]) ToMap(strategy DuplicatedKeyStrategy) *Map[K, V] {
 	m := NewMap[K, V]()
-	m.SetDuplicateKeyStrategy(strategy)
+	m.SetDuplicatedKeyStrategy(strategy)
 	m.Append(pl.List...)
 	return m
 }
 
-func (pl *PairList[K, V]) Dedup(strategy DuplicateKeyStrategy) {
+func (pl *PairList[K, V]) Dedup(strategy DuplicatedKeyStrategy) {
 	pl.List = pl.ToMap(strategy).Pairs().List
 }
 

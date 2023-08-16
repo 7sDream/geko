@@ -1,10 +1,10 @@
 package geko
 
-// DuplicateKeyStrategy controls the behavior of [Map.Set] when meet a
+// DuplicatedKeyStrategy controls the behavior of [Map.Add] when meet a
 // duplicate key. Default strategy is [UpdateValueKeepOrder].
 //
-// If you want store all values of duplicate key, use [PairList] type instead.
-type DuplicateKeyStrategy uint8
+// If you want store all values of duplicated key, use [PairList] type instead.
+type DuplicatedKeyStrategy uint8
 
 const (
 	// UpdateValueKeepOrder will use new value, but keep the key order.
@@ -12,7 +12,7 @@ const (
 	// {"a": 1, "b": 2, "a": 3} => {"a": 3, "b": 2}
 	//
 	// This is the default strategy.
-	UpdateValueKeepOrder DuplicateKeyStrategy = iota
+	UpdateValueKeepOrder DuplicatedKeyStrategy = iota
 	// UpdateValueUpdateOrder will use new value, and move the key to last.
 	//
 	// {"a": 1, "b": 2, "a": 3} => {"b": 2, "a": 3}
@@ -37,15 +37,16 @@ const (
 // stored in *[Map][string, any], all JSON array will be stored in *[List][any],
 // instead of normal map[string]any and []any from std lib.
 //
-// You can [Map.SetDuplicateKeyStrategy] before call [json.Unmarshal] to control
-// the behavior when object has duplicate key in your JSON string data.
+// You can [Map.SetDuplicatedKeyStrategy] before call [json.Unmarshal] to
+// control the behavior when object has duplicated key in your JSON string data.
 //
-// If you do not sure the outmost item is object, see [JSONUnmarshal] function.
+// If you can't make sure the outmost item is object, see [JSONUnmarshal]
+// function.
 type Map[K comparable, V any] struct {
 	order []K
 	inner map[K]V
 
-	onDuplicateKey DuplicateKeyStrategy
+	duplicatedKeyStrategy DuplicatedKeyStrategy
 }
 
 // NewMap creates a new empty map.
@@ -62,34 +63,35 @@ func NewMapWithCapacity[K comparable, V any](capacity int) *Map[K, V] {
 	return m
 }
 
-// DuplicateKeyStrategy get current strategy when Set with a duplicate key.
+// DuplicatedKeyStrategy get current strategy when [Map.Add] with a duplicated
+// key.
 //
-// See document of [DuplicateKeyStrategy] and its enum value for detail.
-func (m *Map[K, V]) DuplicateKeyStrategy() DuplicateKeyStrategy {
-	return m.onDuplicateKey
+// See document of [DuplicatedKeyStrategy] and its enum value for detail.
+func (m *Map[K, V]) DuplicatedKeyStrategy() DuplicatedKeyStrategy {
+	return m.duplicatedKeyStrategy
 }
 
-// SetDuplicateKeyStrategy set strategy when [Map.Set] with a duplicate key.
+// SetDuplicatedKeyStrategy set strategy when [Map.Add] with a duplicated key.
 //
-// See document of [DuplicateKeyStrategy] and its enum value for detail.
-func (m *Map[K, V]) SetDuplicateKeyStrategy(strategy DuplicateKeyStrategy) {
-	m.onDuplicateKey = strategy
+// See document of [DuplicatedKeyStrategy] and its enum value for detail.
+func (m *Map[K, V]) SetDuplicatedKeyStrategy(strategy DuplicatedKeyStrategy) {
+	m.duplicatedKeyStrategy = strategy
 }
 
-// Get a value by key. The second return value is true if the key exists,
-// otherwise false.
+// Get a value by key. The second return value tells if the key exists. If
+// not, returned value will be zero value of type V.
 func (m *Map[K, V]) Get(key K) (V, bool) {
 	v, exist := m.inner[key]
 	return v, exist
 }
 
-// Has checks if key is in the map.
+// Has checks if key exist in the map.
 func (m *Map[K, V]) Has(key K) bool {
 	_, exist := m.inner[key]
 	return exist
 }
 
-// GetOrZeroValue return stored value by key, or the zero value of value type
+// GetOrZeroValue return stored value by key, or the zero value of type V
 // if key not exist.
 func (m *Map[K, V]) GetOrZeroValue(key K) V {
 	return m.inner[key]
@@ -142,11 +144,11 @@ func (m *Map[K, V]) Set(key K, value V) {
 // Add a key value pair.
 //
 // If the key is already exist in map, the behavior is controlled by
-// [Map.DuplicateKeyStrategy].
+// [Map.DuplicatedKeyStrategy].
 func (m *Map[K, V]) Add(key K, value V) {
 	var alreadyExist bool
 
-	switch m.onDuplicateKey {
+	switch m.duplicatedKeyStrategy {
 	default:
 	case UpdateValueKeepOrder:
 		{
@@ -303,5 +305,5 @@ func (m Map[K, V]) MarshalJSON() ([]byte, error) {
 // You shouldn't call this directly, use [json.Unmarshal]/[JSONUnmarshal]
 // instead.
 func (m *Map[K, V]) UnmarshalJSON(data []byte) error {
-	return unmarshalObject[K, V](data, m, OnDuplicateKey(m.onDuplicateKey))
+	return unmarshalObject[K, V](data, m, OnDuplicatedKey(m.duplicatedKeyStrategy))
 }

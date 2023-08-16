@@ -61,39 +61,39 @@ func TestIsAny(t *testing.T) {
 }
 
 func TestIsString(t *testing.T) {
-	if !IsString[string]() {
+	if !isString[string]() {
 		t.Fatalf("isString failed in type string")
 	}
 
-	if IsString[*string]() {
+	if isString[*string]() {
 		t.Fatalf("isString failed in type *string")
 	}
 
-	if IsString[int]() {
+	if isString[int]() {
 		t.Fatalf("isString failed in type int")
 	}
 
-	if IsString[float64]() {
+	if isString[float64]() {
 		t.Fatalf("isString failed in type float64")
 	}
 
-	if IsString[bool]() {
+	if isString[bool]() {
 		t.Fatalf("isString failed in type bool")
 	}
 
-	if IsString[stringWrapper]() {
+	if isString[stringWrapper]() {
 		t.Fatalf("isString failed in type stringWrapper")
 	}
 
-	if IsString[stringStruct]() {
+	if isString[stringStruct]() {
 		t.Fatalf("isString failed in type stringStruct")
 	}
 
-	if IsString[stringFieldStruct]() {
+	if isString[stringFieldStruct]() {
 		t.Fatalf("isString failed in type stringFieldStruct")
 	}
 
-	if IsString[realStruct]() {
+	if isString[realStruct]() {
 		t.Fatalf("isString failed in type realStruct")
 	}
 }

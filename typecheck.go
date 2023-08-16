@@ -9,7 +9,7 @@ func isAny[T any]() bool {
 	return checkerRef.Kind() == reflect.Interface && checkerRef.NumMethod() == 0
 }
 
-func IsString[T any]() bool {
+func isString[T any]() bool {
 	var checker T
 	var checkerTyp = reflect.TypeOf(checker)
 
