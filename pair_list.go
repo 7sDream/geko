@@ -2,13 +2,15 @@ package geko
 
 import "sort"
 
-// Wrapper type for []Pair[K, V], it can be unmarshal/marshal from/to a JSON
-// **object**. It will use the order of keys appear in JSON string and output
-// as is. It saves all items even if their key is duplicated.
+// Wrapper type for [][Pair][K, V].
 //
-// When Unmarshal from json into a `ParList[string, any]`, all inner JSON object
-// will be stored in `*ParList[string, any]`, all JSON array will be stored in
-// `*List[any]`, instead of normal `map[string]any` and `[]any` from std lib.
+// In JSON unmarshal, it will use the order of keys appear in JSON string,
+// and marshal output will use the same order. But differ from [Map], it saves
+// all items when their key is duplicated.
+//
+// When unmarshal from JSON into a *[ParList][string, any], all JSON object will
+// be stored in *ParList[string, any], all JSON array will be stored in
+// *[List][any], instead of normal map[string]any and []any from std lib.
 type PairList[K comparable, V any] struct {
 	List []Pair[K, V]
 }

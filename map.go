@@ -33,8 +33,8 @@ const (
 // In JSON unmarshal, it will use the order of keys appear in JSON string,
 // and marshal output will use the same order.
 //
-// When unmarshal from json into a *[Map][string, any], all json object will be
-// stored in *[Map][string, any], all json array will be stored in *[List][any],
+// When unmarshal from JSON into a *[Map][string, any], all JSON object will be
+// stored in *[Map][string, any], all JSON array will be stored in *[List][any],
 // instead of normal map[string]any and []any from std lib.
 //
 // You can [Map.SetDuplicateKeyStrategy] before call [json.Unmarshal] to control
