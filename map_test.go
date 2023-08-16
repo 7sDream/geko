@@ -147,35 +147,43 @@ func TestMap_GetValueByIndex(t *testing.T) {
 }
 
 func TestMap_Set(t *testing.T) {
-	kom := geko.NewMap[string, int]()
-	kom.Set("a", 1)
-	kom.Set("b", 2)
-	kom.Set("b", 3)
-	kom.Set("c", 4)
-	kom.Set("b", 5)
+	for _, strategy := range []geko.DuplicateKeyStrategy{
+		geko.UpdateValueKeepOrder,
+		geko.UpdateValueUpdateOrder,
+		geko.KeepValueUpdateOrder,
+		geko.Ignore,
+	} {
+		kom := geko.NewMap[string, int]()
+		kom.SetDuplicateKeyStrategy(strategy)
+		kom.Set("a", 1)
+		kom.Set("b", 2)
+		kom.Set("b", 3)
+		kom.Set("c", 4)
+		kom.Set("b", 5)
 
-	keys := []string{
-		kom.GetKeyByIndex(0),
-		kom.GetKeyByIndex(1),
-		kom.GetKeyByIndex(2),
-	}
-	expectedKeys := []string{"a", "b", "c"}
-	if !reflect.DeepEqual(keys, expectedKeys) {
-		t.Fatalf("After Set, Expect keys %#v, got %#v", expectedKeys, keys)
-	}
+		keys := []string{
+			kom.GetKeyByIndex(0),
+			kom.GetKeyByIndex(1),
+			kom.GetKeyByIndex(2),
+		}
+		expectedKeys := []string{"a", "b", "c"}
+		if !reflect.DeepEqual(keys, expectedKeys) {
+			t.Fatalf("After Set, Expect keys %#v, got %#v", expectedKeys, keys)
+		}
 
-	values := []int{
-		kom.GetOrZeroValue("a"),
-		kom.GetOrZeroValue("b"),
-		kom.GetOrZeroValue("c"),
-	}
-	expectedValues := []int{1, 5, 4}
-	if !reflect.DeepEqual(values, expectedValues) {
-		t.Fatalf("After Set, Expect keys %#v, got %#v", expectedValues, values)
+		values := []int{
+			kom.GetOrZeroValue("a"),
+			kom.GetOrZeroValue("b"),
+			kom.GetOrZeroValue("c"),
+		}
+		expectedValues := []int{1, 5, 4}
+		if !reflect.DeepEqual(values, expectedValues) {
+			t.Fatalf("After Set, Expect keys %#v, got %#v", expectedValues, values)
+		}
 	}
 }
 
-func TestMap_Set_Strategy(t *testing.T) {
+func TestMap_Add(t *testing.T) {
 	cases := []struct {
 		strategy       geko.DuplicateKeyStrategy
 		exceptedKeys   []string
@@ -190,9 +198,9 @@ func TestMap_Set_Strategy(t *testing.T) {
 	for _, tt := range cases {
 		kom := geko.NewMap[string, int]()
 		kom.SetDuplicateKeyStrategy(tt.strategy)
-		kom.Set("a", 1)
-		kom.Set("b", 2)
-		kom.Set("a", 3)
+		kom.Add("a", 1)
+		kom.Add("b", 2)
+		kom.Add("a", 3)
 
 		if strategy := kom.DuplicateKeyStrategy(); strategy != tt.strategy {
 			t.Fatalf(

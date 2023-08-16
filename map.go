@@ -130,11 +130,20 @@ func (kom *Map[K, V]) set(key K, value V, alreadyExist bool) {
 	kom.inner[key] = value
 }
 
-// Set a value by key.
+// Set a value by key without change its order, or place it at end if key is
+// not exist.
+//
+// This operation is the same as [Map.Add] when duplicate key strategy is
+// [UpdateValueKeepOrder].
+func (kom *Map[K, V]) Set(key K, value V) {
+	kom.set(key, value, kom.Has(key))
+}
+
+// Add a key value pair.
 //
 // If the key is already exist in map, the behavior is controlled by
 // [Map.DuplicateKeyStrategy].
-func (kom *Map[K, V]) Set(key K, value V) {
+func (kom *Map[K, V]) Add(key K, value V) {
 	var alreadyExist bool
 
 	switch kom.onDuplicateKey {
@@ -171,10 +180,10 @@ func (kom *Map[K, V]) Set(key K, value V) {
 
 // Append a series of kv pairs into map.
 //
-// The effect is consistent with calling [Map.Set](k, v) multi times.
+// The effect is consistent with calling [Map.Add](k, v) multi times.
 func (kom *Map[K, V]) Append(pairs ...Pair[K, V]) {
 	for _, pair := range pairs {
-		kom.Set(pair.Key, pair.Value)
+		kom.Add(pair.Key, pair.Value)
 	}
 }
 

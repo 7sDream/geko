@@ -218,7 +218,7 @@ func unmarshalArray[T any, A jsonArrayLike[T]](data []byte, array A) error {
 
 type jsonObjectLike[K comparable, V any] interface {
 	GetByIndex(int) Pair[K, V]
-	Set(K, V)
+	Add(K, V)
 	Len() int
 }
 
@@ -295,7 +295,7 @@ func parseIntoObject[K comparable, V any, O jsonObjectLike[K, V]](
 		var realKey K
 		reflect.ValueOf(&realKey).Elem().SetString(key)
 
-		object.Set(realKey, value)
+		object.Add(realKey, value)
 	}
 }
 

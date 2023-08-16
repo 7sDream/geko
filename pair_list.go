@@ -15,71 +15,122 @@ type PairList[K comparable, V any] struct {
 	List []Pair[K, V]
 }
 
+// NewPairList creates a new empty list.
 func NewPairList[K comparable, V any]() *PairList[K, V] {
 	return NewPairListFrom[K, V](nil)
 }
 
+// NewPairListWithCapacity likes [NewPairList], but init the inner container
+// with a capacity to optimize memory allocate.
 func NewPairListWithCapacity[K comparable, V any](capacity int) *PairList[K, V] {
 	return NewPairListFrom[K, V](make([]Pair[K, V], 0, capacity))
 }
 
+// NewPairListFrom create a List from a slice.
 func NewPairListFrom[K comparable, V any](list []Pair[K, V]) *PairList[K, V] {
 	return &PairList[K, V]{
 		List: list,
 	}
 }
 
-func (kopl *PairList[K, V]) Get(key K) []V {
+// Get values by key.
+func (pl *PairList[K, V]) Get(key K) []V {
 	var values []V
 
-	for _, pair := range kopl.List {
-		if key == pair.Key {
-			values = append(values, pair.Value)
+	for i := range pl.List {
+		p := &pl.List[i]
+		if key == p.Key {
+			values = append(values, p.Value)
 		}
 	}
 
 	return values
 }
 
-func (kopl *PairList[K, V]) GetFirstOrZeroValue(key K) (value V) {
-	for _, pair := range kopl.List {
-		if key == pair.Key {
-			value = pair.Value
+// Has checks if a key exist in the list.
+func (pl *PairList[K, V]) Has(key K) bool {
+	for i := range pl.List {
+		if key == pl.List[i].Key {
+			return true
 		}
 	}
+
+	return false
+}
+
+// Count get appear times of a key.
+func (pl *PairList[K, V]) Count(key K) int {
+	n := 0
+
+	for i := range pl.List {
+		if key == pl.List[i].Key {
+			n++
+		}
+	}
+
+	return n
+}
+
+// GetFirstOrZeroValue get first value by key, return a zero value of type V if
+// key doesn't exist in list.
+func (pl *PairList[K, V]) GetFirstOrZeroValue(key K) (value V) {
+	for i := range pl.List {
+		p := &pl.List[i]
+		if key == p.Key {
+			value = p.Value
+			break
+		}
+	}
+
 	return
 }
 
-func (kopl *PairList[K, V]) GetKeyByIndex(index int) K {
-	return kopl.List[index].Key
+// GetFirstOrZeroValue get last value by key, return a zero value of type V if
+// key doesn't exist in list.
+func (pl *PairList[K, V]) GetLastOrZeroValue(key K) (value V) {
+	for i := pl.Len() - 1; i >= 0; i-- {
+		p := &pl.List[i]
+		if key == p.Key {
+			value = p.Value
+			break
+		}
+	}
+
+	return
 }
 
-func (kopl *PairList[K, V]) GetByIndex(index int) Pair[K, V] {
-	return kopl.List[index]
+func (pl *PairList[K, V]) GetKeyByIndex(index int) K {
+	return pl.List[index].Key
 }
 
-func (kopl *PairList[K, V]) GetValueByIndex(index int) V {
-	return kopl.List[index].Value
+func (pl *PairList[K, V]) GetByIndex(index int) Pair[K, V] {
+	return pl.List[index]
 }
 
-func (kopl *PairList[K, V]) Set(key K, value V) {
-	kopl.List = append(kopl.List, Pair[K, V]{key, value})
+func (pl *PairList[K, V]) GetValueByIndex(index int) V {
+	return pl.List[index].Value
 }
 
-func (kopl *PairList[K, V]) Extend(pairs ...Pair[K, V]) {
+func (pl *PairList[K, V]) Add(key K, value V) {
+	pl.List = append(pl.List, Pair[K, V]{key, value})
+}
+
+func (kopl *PairList[K, V]) Append(pairs ...Pair[K, V]) {
 	kopl.List = append(kopl.List, pairs...)
 }
 
 func (kopl *PairList[K, V]) Delete(key K) {
-	for i := kopl.Len() - 1; i > 0; i-- {
-		if key == kopl.GetKeyByIndex(i) {
-			kopl.DeleteByIndex(i)
-		}
-	}
+	kopl.Filter(func(p *Pair[K, V]) bool {
+		return p.Key == key
+	})
 }
 
 func (kopl *PairList[K, V]) DeleteByIndex(index int) {
 	kopl.List = append(kopl.List[:index], kopl.List[index+1:]...)
+}
+
+func (kopl *PairList[K, V]) Clear() {
+	kopl.List = nil
 }
 
 func (kopl *PairList[K, V]) Len() int {

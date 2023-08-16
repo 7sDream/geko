@@ -17,7 +17,7 @@ func TestList_New(t *testing.T) {
 
 	kol2 := geko.NewListFrom([]int{1, 2, 3})
 
-	if reflect.DeepEqual(kol2.List, []int{1, 2, 3}) {
+	if !reflect.DeepEqual(kol2.List, []int{1, 2, 3}) {
 		t.Fatalf("NewListFrom doesn't store origin slice")
 	}
 }
