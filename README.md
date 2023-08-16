@@ -6,7 +6,7 @@ When unmarshal from JSON string, the order is determined by their occurrence in 
 
 And of cause, when marshal back to JSON string, it will use the order too.
 
-**Status**: WIP, very early version. API may not be the final version. Works in simple case, but not fully tested.
+**Status**: WIP, feature not finished. API may not be the final version. Works in simple case, but not fully tested.
 
 ## Usage
 
