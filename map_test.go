@@ -3,7 +3,9 @@ package geko_test
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"reflect"
+	"strconv"
 	"testing"
 
 	"github.com/7sDream/geko"
@@ -201,6 +203,212 @@ func TestMap_Append(t *testing.T) {
 	expectedValues := []int{2, 1, 9}
 	if !reflect.DeepEqual(values, expectedValues) {
 		t.Fatalf("After Set, Expect keys %#v, got %#v", expectedValues, values)
+	}
+}
+
+func TestMap_Delete(t *testing.T) {
+	kom := geko.NewMap[string, int]()
+	kom.Set("a", 1)
+
+	kom.Delete("b") // should not panic
+
+	kom.Delete("a")
+
+	if kom.Len() != 0 {
+		t.Fatalf("After Delete all item, Map is not empty")
+	}
+
+	kom = geko.NewMap[string, int]()
+	kom.Set("a", 1)
+	kom.Set("b", 2)
+	kom.Set("c", 3)
+	kom.Delete("b")
+
+	if kom.Len() != 2 {
+		t.Fatalf("After Delete a item, Len does not correct")
+	}
+
+	if _, exist := kom.Get("b"); exist != false {
+		t.Fatalf("After Delete item, it still exist")
+	}
+
+	kom.Set("b", 4)
+
+	if kom.Len() != 3 {
+		t.Fatalf("After Delete and Set a same key, Len does not correct")
+	}
+
+	if v := kom.GetValueByIndex(2); v != 4 {
+		t.Fatalf("Item does not appear in last after Delete and Set")
+	}
+}
+
+func TestMap_DeleteByIndex(t *testing.T) {
+	kom := geko.NewMap[string, int]()
+
+	if !willPanic(func() {
+		kom.DeleteByIndex(1)
+	}) {
+		t.Fatalf("DeleteByIndex with empty map didn't panic")
+	}
+
+	kom.Set("a", 1)
+	kom.Set("b", 2)
+	kom.Set("c", 3)
+	kom.DeleteByIndex(1)
+
+	if kom.Len() != 2 {
+		t.Fatalf("After DeleteByIndex, Len does not correct")
+	}
+
+	if _, exist := kom.Get("b"); exist {
+		t.Fatalf("After DeleteByIndex, it still exist")
+	}
+
+	keys := kom.Keys()
+	excepted := []string{"a", "c"}
+	if !reflect.DeepEqual(keys, excepted) {
+		t.Fatalf("After DeleteByIndex, excepted keys %#v, got %#v", excepted, keys)
+	}
+}
+
+func TestMap_Clear(t *testing.T) {
+	kom := geko.NewMap[string, int]()
+	kom.Set("a", 1)
+	kom.Set("b", 2)
+	kom.Clear()
+
+	if kom.Len() != 0 {
+		t.Fatalf("After Clean, map is not empty")
+	}
+
+	if len(kom.Keys()) != 0 {
+		t.Fatalf("After Clean, map Keys() is not empty")
+	}
+
+	// After Clear, new Set should not panic
+	kom.Set("b", 2)
+	kom.Set("a", 1)
+	keys := kom.Keys()
+	excepted := []string{"b", "a"}
+	if !reflect.DeepEqual(keys, excepted) {
+		t.Fatalf("After Clean, old values should not effect new order")
+	}
+}
+
+func TestMap_Len(t *testing.T) {
+	for times := 0; times < 20; times++ {
+		exceptedLength := rand.Int() % 100
+
+		kom := geko.NewMap[string, int]()
+		for i := 0; i < exceptedLength; i++ {
+			kom.Set(strconv.Itoa(i), i)
+		}
+
+		length := kom.Len()
+		if length != exceptedLength {
+			t.Fatalf("Length excepted %d, got %d", exceptedLength, length)
+		}
+	}
+}
+
+func TestMap_Keys(t *testing.T) {
+	kom := geko.NewMap[string, int]()
+	kom.Set("one", 1)
+	kom.Set("three", 2)
+	kom.Set("two", 2)
+	kom.Set("three", 3)
+
+	kom.Delete("one")
+
+	excepted := []string{"three", "two"}
+	keys := kom.Keys()
+	if !reflect.DeepEqual(keys, excepted) {
+		t.Fatalf("Excepted keys %#v, got %#v", excepted, keys)
+	}
+
+	keys[0] = "haha"
+	if reflect.DeepEqual(keys, kom.Keys()) {
+		t.Fatalf("Modify return keys should not effect map")
+	}
+}
+
+func TestMap_Values(t *testing.T) {
+	kom := geko.NewMap[string, int]()
+	kom.Set("one", 1)
+	kom.Set("three", 2)
+	kom.Set("two", 2)
+	kom.Set("three", 3)
+
+	kom.Delete("one")
+
+	excepted := []int{3, 2}
+	values := kom.Values()
+	if !reflect.DeepEqual(values, excepted) {
+		t.Fatalf("Excepted values %#v, got %#v", excepted, values)
+	}
+
+	values[0] = 100
+	if reflect.DeepEqual(values, kom.Values()) {
+		t.Fatalf("Modify return values should not effect map")
+	}
+
+	type s struct {
+		Value int
+	}
+
+	kom2 := geko.NewMap[string, *s]()
+	kom2.Set("one", &s{Value: 1})
+	kom2.Set("two", &s{Value: 2})
+	kom2.Set("three", &s{Value: 3})
+
+	kom2.Values()[2].Value = 100
+
+	if kom2.GetOrZeroValue("three").Value != 100 {
+		t.Fatalf("Use pointer as value type will allow user modifier inner value")
+	}
+}
+
+func TestMap_Pairs(t *testing.T) {
+	kom := geko.NewMap[string, int]()
+	kom.Set("one", 1)
+	kom.Set("three", 2)
+	kom.Set("two", 2)
+	kom.Set("three", 3)
+	kom.Delete("one")
+
+	expected := []geko.Pair[string, int]{
+		{"three", 3},
+		{"two", 2},
+	}
+	pairs := kom.Pairs().List
+	if !reflect.DeepEqual(pairs, expected) {
+		t.Fatalf("Excepted %#v, got %#v", expected, pairs)
+	}
+}
+
+func TestMap_Sort(t *testing.T) {
+	kom := geko.NewMap[int, string]()
+	kom.Set(3, "three")
+	kom.Set(1, "one")
+	kom.Set(4, "four")
+	kom.Set(2, "two")
+
+	kom.Sort(func(a, b *geko.Pair[int, string]) bool {
+		return a.Key < b.Key
+	})
+
+	exceptedPairs := []geko.Pair[int, string]{
+		{1, "one"},
+		{2, "two"},
+		{3, "three"},
+		{4, "four"},
+	}
+
+	pairs := kom.Pairs().List
+
+	if !reflect.DeepEqual(pairs, exceptedPairs) {
+		t.Fatalf("Sort result excepted %#v, got %#v", exceptedPairs, pairs)
 	}
 }
 
