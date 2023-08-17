@@ -136,7 +136,7 @@ func (ps *Pairs[K, V]) GetValueByIndex(index int) V {
 
 // Add a key value pair to the end of list.
 func (ps *Pairs[K, V]) Add(key K, value V) {
-	ps.List = append(ps.List, Pair[K, V]{key, value})
+	ps.List = append(ps.List, CreatePair(key, value))
 }
 
 // Append some key value pairs to the end of list.

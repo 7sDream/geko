@@ -109,7 +109,7 @@ func (m *Map[K, V]) GetKeyByIndex(index int) K {
 // You should make sure 0 <= i < Len(), panic if out of bound.
 func (m *Map[K, V]) GetByIndex(index int) Pair[K, V] {
 	k := m.GetKeyByIndex(index)
-	return Pair[K, V]{Key: k, Value: m.GetOrZeroValue(k)}
+	return CreatePair(k, m.GetOrZeroValue(k))
 }
 
 // GetValueByIndex get the value by index of key order.
