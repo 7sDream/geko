@@ -10,21 +10,21 @@ import (
 
 // ===== Decoder =====
 
-// JSONUnmarshal likes json.Unmarshal, but uses our Map and List when meet JSON
-// object and array.
+// JSONUnmarshal likes json.Unmarshal, but uses our [Map]/[Pairs] and [List]
+// when meet JSON object and array.
 //
-// So the returned value can be:
+// So the type of returned value can be:
 // bool, float64/[json.Number], string, nil,
-// *[Map][string, any]/*[PairList][string, any], *[List][any].
+// *[Map][string, any]/*[Pairs][string, any], *[List][any].
 //
-// The any value in the above container can only be the above type, recursive.
+// The any type in the above container can only be the above type, recursive.
 func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 	return newDecoder(bytes.NewReader(data), option...).decode()
 }
 
 type decodeOptions struct {
 	useNumber             bool
-	usePairList           bool
+	usePairs              bool
 	duplicatedKeyStrategy DuplicatedKeyStrategy
 }
 
@@ -39,11 +39,11 @@ func UseNumber(v bool) DecodeOption {
 	}
 }
 
-// UsePairList option will make [JSONUnmarshal] uses *[PairList][string, any] to
+// UsePairs option will make [JSONUnmarshal] uses *[Pairs][string, any] to
 // store JSON object, instead of *[Map][string, any].
-func UsePairList(v bool) DecodeOption {
+func UsePairs(v bool) DecodeOption {
 	return func(opts *decodeOptions) {
-		opts.usePairList = v
+		opts.usePairs = v
 	}
 }
 
@@ -128,8 +128,8 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 		case '{':
 			{
 				var object jsonObject[string, any]
-				if d.opts.usePairList {
-					object = NewPairList[string, any]()
+				if d.opts.usePairs {
+					object = NewPairs[string, any]()
 				} else {
 					m := NewMap[string, any]()
 					m.SetDuplicatedKeyStrategy(d.opts.duplicatedKeyStrategy)

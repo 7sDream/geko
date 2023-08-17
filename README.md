@@ -45,7 +45,7 @@ fmt.Printf("marshal result: %s", string(data))
 // TODO
 ```
 
-### PairList
+### Pairs
 
 ```golang
 // TODO

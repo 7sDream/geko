@@ -38,6 +38,20 @@ func TestMap_Get(t *testing.T) {
 	}
 }
 
+func TestMap_Has(t *testing.T) {
+	m := geko.NewMap[string, int]()
+	m.Set("one", 1)
+	m.Set("two", 2)
+
+	if !m.Has("one") {
+		t.Fatalf("Has said key 'one' does not exist")
+	}
+
+	if m.Has("three") {
+		t.Fatalf("Has said key 'three' exist")
+	}
+}
+
 func willPanic(f func()) (result bool) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -77,8 +91,8 @@ func TestMap_GetKeyByIndex(t *testing.T) {
 	}
 
 	expected := "one"
-	if v := m.GetKeyByIndex(0); v != "one" {
-		t.Fatalf("GetKeyByIndex(2), Expect %#v, got %#v", expected, v)
+	if v := m.GetKeyByIndex(0); v != expected {
+		t.Fatalf("GetKeyByIndex(0), Expect %#v, got %#v", expected, v)
 	}
 }
 
@@ -110,7 +124,7 @@ func TestMap_GetByIndex(t *testing.T) {
 
 	expected := geko.Pair[string, int]{Key: "three", Value: 3}
 	if v := m.GetByIndex(1); v != expected {
-		t.Fatalf("GetByIndex(2), Expect %#v, got %#v", expected, v)
+		t.Fatalf("GetByIndex(1), Expect %#v, got %#v", expected, v)
 	}
 }
 
@@ -193,6 +207,9 @@ func TestMap_Add(t *testing.T) {
 		{geko.UpdateValueUpdateOrder, []string{"b", "a"}, []int{2, 3}},
 		{geko.KeepValueUpdateOrder, []string{"b", "a"}, []int{2, 1}},
 		{geko.Ignore, []string{"a", "b"}, []int{1, 2}},
+
+		/* invalid value treat as default strategy */
+		{geko.DuplicatedKeyStrategy(10), []string{"a", "b"}, []int{3, 2}},
 	}
 
 	for _, tt := range cases {
@@ -214,14 +231,14 @@ func TestMap_Add(t *testing.T) {
 
 		if !reflect.DeepEqual(keys, tt.exceptedKeys) {
 			t.Fatalf(
-				"for strategy %#v, Excepted keys %#v, got %#v",
+				"For strategy %#v, excepted keys %#v, got %#v",
 				tt.strategy, tt.exceptedKeys, keys,
 			)
 		}
 
 		if !reflect.DeepEqual(values, tt.exceptedValues) {
 			t.Fatalf(
-				"for strategy %#v, Excepted values %#v, got %#v",
+				"For strategy %#v, excepted values %#v, got %#v",
 				tt.strategy, tt.exceptedValues, values,
 			)
 		}
@@ -245,7 +262,7 @@ func TestMap_Append(t *testing.T) {
 	}
 	expectedKeys := []string{"s", "z", "w"}
 	if !reflect.DeepEqual(keys, expectedKeys) {
-		t.Fatalf("After Set, Expect keys %#v, got %#v", expectedKeys, keys)
+		t.Fatalf("After Append, expect keys %#v, got %#v", expectedKeys, keys)
 	}
 
 	values := []int{
@@ -255,7 +272,7 @@ func TestMap_Append(t *testing.T) {
 	}
 	expectedValues := []int{2, 1, 9}
 	if !reflect.DeepEqual(values, expectedValues) {
-		t.Fatalf("After Set, Expect keys %#v, got %#v", expectedValues, values)
+		t.Fatalf("After Append, expect keys %#v, got %#v", expectedValues, values)
 	}
 }
 
@@ -356,6 +373,11 @@ func TestMap_Len(t *testing.T) {
 		m := geko.NewMap[string, int]()
 		for i := 0; i < exceptedLength; i++ {
 			m.Set(strconv.Itoa(i), i)
+			// Add some existing key with a certain probability
+			// Shouldn't effect length
+			if rand.Int()%3 == 0 {
+				m.Set(strconv.Itoa(rand.Int()%exceptedLength), rand.Int())
+			}
 		}
 
 		length := m.Len()

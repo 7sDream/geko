@@ -3,7 +3,7 @@ package geko
 // DuplicatedKeyStrategy controls the behavior of [Map.Add] when meet a
 // duplicate key. Default strategy is [UpdateValueKeepOrder].
 //
-// If you want store all values of duplicated key, use [PairList] type instead.
+// If you want store all values of duplicated key, use [Pairs] type instead.
 type DuplicatedKeyStrategy uint8
 
 const (
@@ -150,6 +150,7 @@ func (m *Map[K, V]) Add(key K, value V) {
 
 	switch m.duplicatedKeyStrategy {
 	default:
+		fallthrough
 	case UpdateValueKeepOrder:
 		{
 			alreadyExist = m.Has(key)
@@ -260,10 +261,10 @@ func (m *Map[K, V]) Values() []V {
 //
 // Performance: O(n) operation. If you want iterate over the map,
 // maybe [Map.Len] + [Map.GetByIndex] is a better choice.
-func (m *Map[K, V]) Pairs() *PairList[K, V] {
+func (m *Map[K, V]) Pairs() *Pairs[K, V] {
 	length := m.Len()
 
-	pairs := NewPairListWithCapacity[K, V](length)
+	pairs := NewPairsWithCapacity[K, V](length)
 
 	for i := 0; i < length; i++ {
 		pairs.List = append(pairs.List, m.GetByIndex(i))
