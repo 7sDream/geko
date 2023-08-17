@@ -161,10 +161,15 @@ type jsonArray[T any] interface {
 }
 
 func marshalArray[T any, A jsonArray[T]](array A) ([]byte, error) {
+	slice := *array.innerSlice()
+	if slice == nil {
+		return []byte(`[]`), nil
+	}
+
 	var data bytes.Buffer
 	enc := json.NewEncoder(&data)
 	enc.SetEscapeHTML(false)
-	err := enc.Encode(*array.innerSlice())
+	err := enc.Encode(slice)
 	return data.Bytes(), err
 }
 

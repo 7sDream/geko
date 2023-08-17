@@ -241,3 +241,29 @@ func TestMap_UnmarshalJSON_InnerValueUseOurType(t *testing.T) {
 		}
 	}
 }
+
+func TestList_MarshalJSON_Nil(t *testing.T) {
+	var l *geko.List[int]
+
+	data, err := json.Marshal(l)
+	if err != nil {
+		t.Fatalf("Marshal nil list with error: %s", err.Error())
+	}
+
+	if string(data) != `null` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestList_MarshalJSON_EmptyList(t *testing.T) {
+	l := geko.NewList[int]()
+
+	data, err := json.Marshal(l)
+	if err != nil {
+		t.Fatalf("Marshal empty list with error: %s", err.Error())
+	}
+
+	if string(data) != `[]` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
