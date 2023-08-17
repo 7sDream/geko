@@ -178,6 +178,81 @@ func TestPairs_GetByIndex(t *testing.T) {
 	}
 }
 
+func TestPairs_SetKeyByIndex(t *testing.T) {
+	m := geko.NewPairs[string, int]()
+
+	if !willPanic(func() {
+		m.SetKeyByIndex(0, "new")
+	}) {
+		t.Fatalf("SetKeyByIndex with empty map didn't panic")
+	}
+
+	m.Add("one", 1)
+	m.Add("four", 2)
+	m.Add("three", 3)
+
+	if !willPanic(func() {
+		m.SetKeyByIndex(3, "new")
+	}) {
+		t.Fatalf("SetKeyByIndex with out-of-bound index didn't panic")
+	}
+
+	m.SetKeyByIndex(1, "two")
+	if m.GetKeyByIndex(1) != "two" {
+		t.Fatalf("SetKeyByIndex do not effect")
+	}
+}
+
+func TestPairs_SetValueByIndex(t *testing.T) {
+	m := geko.NewPairs[string, int]()
+
+	if !willPanic(func() {
+		m.SetValueByIndex(0, 0)
+	}) {
+		t.Fatalf("SetValueByIndex with empty map didn't panic")
+	}
+
+	m.Add("one", 1)
+	m.Add("two", 4)
+	m.Add("three", 3)
+
+	if !willPanic(func() {
+		m.SetKeyByIndex(3, "new")
+	}) {
+		t.Fatalf("SetValueByIndex with out-of-bound index didn't panic")
+	}
+
+	m.SetValueByIndex(1, 2)
+	if m.GetValueByIndex(1) != 2 {
+		t.Fatalf("SetValueByIndex do not effect")
+	}
+}
+
+func TestPairs_SetByIndex(t *testing.T) {
+	m := geko.NewPairs[string, int]()
+
+	if !willPanic(func() {
+		m.SetByIndex(0, "zero", 0)
+	}) {
+		t.Fatalf("SetByIndex with empty map didn't panic")
+	}
+
+	m.Add("one", 1)
+	m.Add("four", 4)
+	m.Add("three", 3)
+
+	if !willPanic(func() {
+		m.SetByIndex(3, "new", 0)
+	}) {
+		t.Fatalf("SetByIndex with out-of-bound index didn't panic")
+	}
+
+	m.SetByIndex(1, "two", 2)
+	if m.GetByIndex(1) != geko.CreatePair("two", 2) {
+		t.Fatalf("SetByIndex do not effect")
+	}
+}
+
 func TestPairs_GetValueByIndex(t *testing.T) {
 	m := geko.NewPairs[string, int]()
 

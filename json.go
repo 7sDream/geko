@@ -174,6 +174,8 @@ func marshalArray[T any, A jsonArray[T]](array A) ([]byte, error) {
 }
 
 func parseIntoArray[T any, A jsonArray[T]](d *decoder, array A) error {
+	*array.innerSlice() = nil
+
 	for {
 		token, err := d.decoder.Token()
 		if err != nil {
@@ -248,9 +250,8 @@ func marshalObject[K comparable, V any, O jsonObject[K, V]](object O) ([]byte, e
 
 		pair := object.GetByIndex(i)
 
-		if err := enc.Encode(pair.Key); err != nil {
-			return nil, err
-		}
+		// Key is string type, encoding will never fail
+		enc.Encode(pair.Key)
 
 		buf.WriteByte(':')
 

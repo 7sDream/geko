@@ -134,6 +134,21 @@ func (ps *Pairs[K, V]) GetValueByIndex(index int) V {
 	return ps.List[index].Value
 }
 
+// SetKeyByIndex changes key of item at index.
+func (ps *Pairs[K, V]) SetKeyByIndex(index int, key K) {
+	ps.List[index].Key = key
+}
+
+// SetValueByIndex changes value of item at index.
+func (ps *Pairs[K, V]) SetValueByIndex(index int, value V) {
+	ps.List[index].Value = value
+}
+
+// SetByIndex key and value at index.
+func (ps *Pairs[K, V]) SetByIndex(index int, key K, value V) {
+	ps.List[index] = CreatePair(key, value)
+}
+
 // Add a key value pair to the end of list.
 func (ps *Pairs[K, V]) Add(key K, value V) {
 	ps.List = append(ps.List, CreatePair(key, value))
