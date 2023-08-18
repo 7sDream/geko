@@ -1,12 +1,15 @@
-// Package geko provides some common order-preserving types, mainly to solve the
-// problem that in some scenarios, the field order in JSON Object is meaningful,
-// but when unmarshaling into a a normal map, the order information will be
-// erased.
+// Package geko provides GEneric Keep Order types.
+//
+// It's mainly used to solve the issue that in some scenarios, the field order
+// in JSON Object is meaningful, but when unmarshaling into a normal map, the
+// order information will be erased. See [golang/go#27179].
 //
 // There are 3 types:
-// - [Map] to replace map.
-// - [Pairs] to replace map, when you need to keep all values of duplicated key
-// - [List] to replace list.
+//
+//   - [Map], and it's type alias [Object], to replace map.
+//   - [Pairs], and it's type alias [ObjectItems], to replace map, when you need
+//     to keep all values of duplicated key.
+//   - [List], and it's type alias [Array] to replace slice.
 //
 // And a [JSONUnmarshal] function to replace [json.Unmarshal].
 //
@@ -31,4 +34,6 @@
 //
 // Outside of JSON processing, these types can also be used simply as generic
 // container types with insertion order preservation feature.
+//
+// [golang/go#27179]: https://github.com/golang/go/issues/27179
 package geko
