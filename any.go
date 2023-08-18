@@ -40,8 +40,8 @@ func (v *Any) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// A convenience function for unmarshal JSON data into an [Any] and get the
-// inner any value.
+// JSONUnmarshal is A convenience function for unmarshal JSON data into an
+// [Any] and get the inner any value.
 func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 	a := Any{Opts: CreateDecodeOptions(option...)}
 	err := json.Unmarshal(data, &a)

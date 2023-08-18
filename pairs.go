@@ -101,7 +101,7 @@ func (ps *Pairs[K, V]) GetFirstOrZeroValue(key K) (value V) {
 	return
 }
 
-// GetFirstOrZeroValue get last value by key, return a zero value of type V if
+// GetLastOrZeroValue get last value by key, return a zero value of type V if
 // key doesn't exist in list.
 //
 // Performance: O(n)

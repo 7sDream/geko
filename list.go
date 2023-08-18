@@ -1,6 +1,6 @@
 package geko
 
-// Wrapper type of a normal slice.
+// List is wrapper type of a normal slice.
 //
 // If T is any, will use [ObjectItems] from this package to store JSON object,
 // use [Array] to store JSON array, instead of normal map[string]any and []any.
@@ -26,8 +26,8 @@ func NewListFrom[T any](list []T) *List[T] {
 	}
 }
 
-// NewList create a new empty List, but init with some capacity, for optimize
-// memory allocation.
+// NewListWithCapacity create a new empty List, but init with some capacity,
+// for optimize memory allocation.
 func NewListWithCapacity[T any](capacity int) *List[T] {
 	return NewListFrom[T](make([]T, 0, capacity))
 }
@@ -57,6 +57,7 @@ func (l *List[T]) Len() int {
 	return len(l.List)
 }
 
+//nolint:unused // used in jsonArray interface
 func (l *List[T]) innerSlice() *[]T {
 	return &l.List
 }

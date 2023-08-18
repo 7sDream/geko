@@ -1,0 +1,112 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - funlen
+    - gocritic
+    - gocyclo
+    - goimports
+    - gofmt
+    - gosimple
+    - govet
+    - ineffassign
+    - lll
+    - revive
+    - staticcheck
+    - unused
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  funlen:
+    lines: 80
+    statements: 80
+    ignore-comments: true
+  gocritic:
+  gocyclo:
+    min-complexity: 20
+  goimports:
+    local-prefixes: github.com/7sDream/geko
+  gofmt:
+  gosimple:
+    checks:
+      - "all"
+  govet:
+    check-shadowing: true
+  ineffassign:
+  lll:
+    line-length: 120
+    tab-width: 4
+  revive:
+    confidence: 0
+    rules:
+      - name: context-keys-type
+      - name: var-declaration
+      - name: unexported-return
+      - name: errorf
+      - name: blank-imports
+      - name: context-as-argument
+      - name: dot-imports
+      - name: error-return
+      - name: error-strings
+      - name: error-naming
+      - name: exported
+        arguments:
+          - sayRepetitiveInsteadOfStutters
+      - name: if-return
+      - name: increment-decrement
+      - name: var-naming
+      - name: package-comments
+      - name: range
+      - name: receiver-naming
+      - name: indent-error-flow
+      - name: argument-limit
+        arguments:
+          - 5
+      - name: empty-block
+      - name: superfluous-else
+      - name: modifies-parameter
+      - name: unused-parameter
+        arguments:
+          - allowRegex: "^_"
+      - name: unreachable-code
+      - name: unnecessary-stmt
+      - name: struct-tag
+      - name: modifies-value-receiver
+      - name: constant-logical-expr
+      - name: redefines-builtin-id
+      - name: function-result-limit
+        arguments:
+          - 3
+      - name: range-val-in-closure
+      - name: range-val-address
+      - name: unhandled-error
+        arguments:
+          - ^fmt\..*
+      - name: string-of-int
+      - name: unconditional-recursion
+      - name: identical-branches
+      - name: defer
+      - name: optimize-operands-order
+      - name: use-any
+  staticcheck:
+    checks:
+      - "all"
+  unused:
+
+run:
+  go: 1.18
+
+issues:
+  exclude-use-default: false
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - funlen
+        - errcheck
+    - path: typecheck_test\.go
+      linters:
+        - unused
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false

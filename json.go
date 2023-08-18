@@ -281,11 +281,12 @@ func parseIntoArray[T any, A jsonArray[T]](d *decoder, array A) error {
 
 		var value T
 
-		if v, err := d.nextAfterToken(token); err != nil {
+		v, err := d.nextAfterToken(token)
+		if err != nil {
 			return err
-		} else {
-			value = v.(T)
 		}
+
+		value, _ = v.(T) // never fails because we have checked T is any too
 
 		*array.innerSlice() = append(*array.innerSlice(), value)
 	}
@@ -332,26 +333,26 @@ func marshalObject[K comparable, V any, O jsonObject[K, V]](object O) ([]byte, e
 	enc := json.NewEncoder(&buf)
 	enc.SetEscapeHTML(false)
 
-	buf.WriteByte('{')
+	_ = buf.WriteByte('{')
 
 	for i, length := 0, object.Len(); i < length; i++ {
 		if i > 0 {
-			buf.WriteByte(',')
+			_ = buf.WriteByte(',')
 		}
 
 		pair := object.GetByIndex(i)
 
-		// Key is string type, encoding will never fail
-		enc.Encode(pair.Key)
+		// Key is string type, encoding never fail
+		_ = enc.Encode(pair.Key)
 
-		buf.WriteByte(':')
+		_ = buf.WriteByte(':')
 
 		if err := enc.Encode(pair.Value); err != nil {
 			return nil, err
 		}
 	}
 
-	buf.WriteByte('}')
+	_ = buf.WriteByte('}')
 
 	return buf.Bytes(), nil
 }
@@ -382,10 +383,12 @@ func parseIntoObject[K comparable, V any, O jsonObject[K, V]](
 		var value V
 
 		if valueIsAny { // if v is any, we parse it into our json value types
-			if v, err := d.next(); err != nil {
+			var v any
+
+			if v, err = d.next(); err != nil {
 				return err
 			} else if v != nil {
-				value = v.(V)
+				value, _ = v.(V) // never fails because we have checked type V is any
 			}
 		} else { // otherwise V is a real type, we can let std lib parsing it for us
 			if err = d.decoder.Decode(&value); err != nil {

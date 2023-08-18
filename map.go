@@ -212,7 +212,7 @@ func (m *Map[K, V]) Delete(key K) {
 	delete(m.inner, key)
 }
 
-// Delete a item by it's index in order.
+// DeleteByIndex delete a item by it's index in order.
 //
 // You should make sure 0 <= i < Len(), panic if out of bound.
 //
@@ -240,7 +240,7 @@ func (m *Map[K, V]) Len() int {
 // maybe [Map.Len] + [Map.GetKeyByIndex] is a better choice.
 func (m *Map[K, V]) Keys() []K {
 	// copy to avoid user modify the order.
-	keys := make([]K, m.Len(), m.Len())
+	keys := make([]K, m.Len())
 	copy(keys, m.order)
 	return keys
 }

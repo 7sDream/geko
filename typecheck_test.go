@@ -19,6 +19,7 @@ type realStruct struct {
 	i int
 }
 
+//nolint:revive
 type emptyInterface interface {
 }
 
@@ -31,7 +32,7 @@ type privateInterface interface {
 }
 
 func TestIsAny(t *testing.T) {
-	if !isEmptyInterface[interface{}]() {
+	if !isEmptyInterface[interface{}]() { //nolint:revive
 		t.Fatalf("isAny failed in type interface{}")
 	}
 
