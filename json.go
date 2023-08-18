@@ -396,10 +396,7 @@ func parseIntoObject[K comparable, V any, O jsonObject[K, V]](
 			}
 		}
 
-		var realKey K
-		reflect.ValueOf(&realKey).Elem().SetString(key)
-
-		object.Add(realKey, value)
+		object.Add(any(key).(K), value)
 	}
 }
 

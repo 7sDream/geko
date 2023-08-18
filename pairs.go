@@ -8,8 +8,8 @@ import "sort"
 // and marshal output will use the same order. But differ from [Map], it saves
 // all items when their key is duplicated.
 //
-// When unmarshal from JSON into a [ObjectItem], all JSON object will be
-// stored in [ObjectItem], all JSON array will be stored in [Array],
+// When unmarshal from JSON into a [ObjectItems], all JSON object will be
+// stored in [ObjectItems], all JSON array will be stored in [Array],
 // instead of normal map[string]any and []any from std lib.
 //
 // Notice: Although this type behaves like a [Map], because it is only a slice
