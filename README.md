@@ -1,6 +1,6 @@
 # Geko
 
-[Document]
+![license-badge] ![coverage-badge] [![document-badge]][document]
 
 geko provides GEneric Keep Order types.
 
@@ -139,5 +139,8 @@ See [Document] for detail of all APIs.
 
 MIT. See LICENSE file.
 
-[Document]: https://pkg.go.dev/github.com/7sDream/geko
+[coverage-badge]: https://raw.githubusercontent.com/7sDream/geko/badges/.badges/master/coverage.svg
+[document-badge]: https://img.shields.io/badge/-Document-blue?style=for-the-badge&logo=readthedocs
+[license-badge]: https://img.shields.io/github/license/7sDream/geko?style=for-the-badge
+[document]: https://pkg.go.dev/github.com/7sDream/geko
 [golang/go#27179]: https://github.com/golang/go/issues/27179
