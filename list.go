@@ -2,7 +2,7 @@ package geko
 
 // Wrapper type of a normal slice.
 //
-// If T is any, will use [Object] from this package to store JSON object,
+// If T is any, will use [ObjectItems] from this package to store JSON object,
 // use [Array] to store JSON array, instead of normal map[string]any and []any.
 // If T is a concrete type, the behavior is same as a normal slice.
 type List[T any] struct {

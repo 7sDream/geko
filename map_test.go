@@ -37,6 +37,14 @@ func ExampleMap() {
 	// four: 4
 }
 
+func TestMap_NewWithCapacity(t *testing.T) {
+	m := geko.NewMapWithCapacity[string, int](20)
+
+	if reflect.ValueOf(m).Elem().FieldByName("order").Cap() != 20 {
+		t.Fatalf("NewMapWithCapacity does not init with capacity")
+	}
+}
+
 func TestMap_Get(t *testing.T) {
 	m := geko.NewMap[string, int]()
 	m.Set("one", 1)
