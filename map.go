@@ -49,6 +49,10 @@ type Map[K comparable, V any] struct {
 	duplicatedKeyStrategy DuplicatedKeyStrategy
 }
 
+// Object is [Map] whose type parameters are specialized as
+// [string, any], used to represent dynamic objects in JSON.
+type Object *Map[string, any]
+
 // NewMap creates a new empty map.
 func NewMap[K comparable, V any]() *Map[K, V] {
 	return &Map[K, V]{}

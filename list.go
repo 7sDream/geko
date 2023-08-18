@@ -9,6 +9,10 @@ type List[T any] struct {
 	List []T
 }
 
+// Array is a [List] whose type parameters are specialized as any, used to
+// represent dynamic array in JSON.
+type Array *List[any]
+
 // NewList create a new empty List.
 func NewList[T any]() *List[T] {
 	return NewListFrom[T](nil)

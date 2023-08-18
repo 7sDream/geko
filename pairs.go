@@ -19,6 +19,10 @@ type Pairs[K comparable, V any] struct {
 	List []Pair[K, V]
 }
 
+// ObjectItems is [Pairs] whose type parameters are specialized as
+// [string, any], used to represent dynamic objects in JSON.
+type ObjectItems *Map[string, any]
+
 // NewPairs creates a new empty list.
 func NewPairs[K comparable, V any]() *Pairs[K, V] {
 	return NewPairsFrom[K, V](nil)
