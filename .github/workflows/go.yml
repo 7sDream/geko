@@ -13,6 +13,8 @@ on:
 
 jobs:
   build:
+    permissions:
+      content: write # for create test coverage badge in repo
     strategy:
       matrix:
         version:
