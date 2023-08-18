@@ -1,7 +1,7 @@
 // Package geko provides GEneric Keep Order types.
 //
 // It's mainly used to solve the issue that in some scenarios, the field order
-// in JSON object is meaningful, but when unmarshal into a normal map, this
+// in JSON object is meaningful, but when unmarshal into a normal map, these
 // information will be lost. See [golang/go#27179].
 //
 // # Provided types

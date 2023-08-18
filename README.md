@@ -1,12 +1,20 @@
-# Geko
+# geko
 
 ![license-badge] ![coverage-badge] [![document-badge]][document]
 
 geko provides GEneric Keep Order types.
 
-It's mainly used to solve the issue that in some scenarios, the field order in JSON object is meaningful, but when unmarshal into a normal map, the order information will be erased. See [golang/go#27179].
+It's mainly used to solve the issue that in some scenarios, the field order in JSON object is meaningful, but when unmarshal into a normal map, these information will be lost. See [golang/go#27179].
 
-Outside of JSON processing, those type can also be simply used as generic container with insertion order preservation feature.
+There are many projects trying to solve it, but most of them lack some features that I need, see bellow.
+
+## Features
+
+- Not limited to JSON processing, can also be used as container with insertion order preservation feature.
+- Generics, for better performance.
+- Customizable strategy to deal with duplicated key, auto deduplication.
+- Option to use json.Number to preserve the full precision of number field in unmarshaling.
+- Fully tested, 100% coverage.
 
 **Status**: Beta. All features I need are implemented and tested, But API design may not be the final version.
 
