@@ -4,13 +4,13 @@ import "sort"
 
 // Pairs is a wrapper type of [][Pair][K, V].
 //
-// In JSON unmarshal, it will use the order of keys appear in JSON string,
+// In JSON unmarshal, it will use the order of appearance in input JSON data,
 // and marshal output will use the same order. But differ from [Map], it saves
 // all items when their key is duplicated.
 //
-// When unmarshal from JSON into a *[Pairs][string, any], all JSON object will
-// be stored in *[Pairs][string, any], all JSON array will be stored in
-// *[List][any], instead of normal map[string]any and []any from std lib.
+// When unmarshal from JSON into a [ObjectItem], all JSON object will be
+// stored in [ObjectItem], all JSON array will be stored in [Array],
+// instead of normal map[string]any and []any from std lib.
 //
 // Notice: Although this type behaves like a [Map], because it is only a slice
 // internally, the performance of some APIs are not very good. It is best to

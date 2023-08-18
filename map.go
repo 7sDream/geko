@@ -30,14 +30,14 @@ const (
 
 // Map is a map, in which the kv pairs will keep order of their insertion.
 //
-// In JSON unmarshal, it will use the order of keys in input JSON data,
+// In JSON unmarshal, it will use the order of appearance in input JSON data,
 // and marshal output will use the same order.
 //
 // When unmarshal from JSON into a [Object], all JSON object will be
 // stored in [Object], all JSON array will be stored in [Array],
 // instead of normal map[string]any and []any from std lib.
 //
-// You can [Map.SetDuplicatedKeyStrategy] before call [json.Unmarshal] to
+// You can use [Map.SetDuplicatedKeyStrategy] before call [json.Unmarshal] to
 // control the behavior when object has duplicated key in your JSON string data.
 //
 // If you can't make sure the outmost item is object, try [JSONUnmarshal].

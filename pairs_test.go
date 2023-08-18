@@ -43,9 +43,9 @@ func ExamplePairs() {
 }
 
 func TestPairs_New(t *testing.T) {
-	l := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
-	if l.List != nil {
+	if ps.List != nil {
 		t.Fatalf("NewPairs inner slice is not nil")
 	}
 
@@ -54,278 +54,278 @@ func TestPairs_New(t *testing.T) {
 		{"two", 2},
 		{"three", 3},
 	}
-	l2 := geko.NewPairsFrom(list)
+	ps2 := geko.NewPairsFrom(list)
 
-	if !reflect.DeepEqual(l2.List, list) {
+	if !reflect.DeepEqual(ps2.List, list) {
 		t.Fatalf("NewPairs doesn't store origin slice")
 	}
 }
 
 func TestPairs_NewWithCapacity(t *testing.T) {
-	l := geko.NewPairsWithCapacity[string, int](12)
+	ps := geko.NewPairsWithCapacity[string, int](12)
 
-	if cap(l.List) != 12 {
+	if cap(ps.List) != 12 {
 		t.Fatalf("NewPairsWithCapacity inner slice does not have correct capacity")
 	}
 }
 
 func TestPairs_Get(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("one", 1)
-	m.Add("two", 2)
-	m.Add("two", 22)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("one", 1)
+	ps.Add("two", 2)
+	ps.Add("two", 22)
 
-	if v := m.Get("one"); v[0] != 1 {
+	if v := ps.Get("one"); v[0] != 1 {
 		t.Fatalf("Expect %d, got %d", 1, v)
 	}
 
-	value := m.Get("two")
+	value := ps.Get("two")
 	exceptedValues := []int{2, 22}
 	if !reflect.DeepEqual(value, exceptedValues) {
 		t.Fatalf("Expect %d, got %d", exceptedValues, value)
 	}
 
-	if v := m.Get("not_exist"); len(v) != 0 {
+	if v := ps.Get("not_exist"); len(v) != 0 {
 		t.Fatalf("Get a not exist key should return empty slice")
 	}
 }
 
 func TestPairs_Has(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("one", 1)
-	m.Add("two", 2)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("one", 1)
+	ps.Add("two", 2)
 
-	if !m.Has("one") {
+	if !ps.Has("one") {
 		t.Fatalf("Has said key 'one' does not exist")
 	}
 
-	if m.Has("three") {
+	if ps.Has("three") {
 		t.Fatalf("Has said key 'three' exist")
 	}
 }
 
 func TestPairs_Count(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("one", 1)
-	m.Add("two", 2)
-	m.Add("two", 22)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("one", 1)
+	ps.Add("two", 2)
+	ps.Add("two", 22)
 
-	if m.Count("zero") != 0 {
+	if ps.Count("zero") != 0 {
 		t.Fatalf("Count 'zero' not correct")
 	}
 
-	if m.Count("one") != 1 {
+	if ps.Count("one") != 1 {
 		t.Fatalf("Count 'one' not correct")
 	}
 
-	if m.Count("two") != 2 {
+	if ps.Count("two") != 2 {
 		t.Fatalf("Count 'two' not correct")
 	}
 }
 
 func TestPairs_GetXXXOrZeroValue(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("one", 1)
-	m.Add("two", 2)
-	m.Add("one", 11)
-	m.Add("two", 22)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("one", 1)
+	ps.Add("two", 2)
+	ps.Add("one", 11)
+	ps.Add("two", 22)
 
-	if v := m.GetFirstOrZeroValue("one"); v != 1 {
+	if v := ps.GetFirstOrZeroValue("one"); v != 1 {
 		t.Fatalf("Expect %d, got %d", 1, v)
 	}
 
-	if v := m.GetLastOrZeroValue("two"); v != 22 {
+	if v := ps.GetLastOrZeroValue("two"); v != 22 {
 		t.Fatalf("Expect %d, got %d", 22, v)
 	}
 
-	if v := m.GetFirstOrZeroValue("not_exist"); v != 0 {
+	if v := ps.GetFirstOrZeroValue("not_exist"); v != 0 {
 		t.Fatalf("GetFirstOrZeroValue a not exist key should return zero value")
 	}
 
-	if v := m.GetLastOrZeroValue("not_exist"); v != 0 {
+	if v := ps.GetLastOrZeroValue("not_exist"); v != 0 {
 		t.Fatalf("GetLastOrZeroValue a not exist key should return zero value")
 	}
 }
 
 func TestPairs_GetKeyByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.GetKeyByIndex(0)
+		ps.GetKeyByIndex(0)
 	}) {
 		t.Fatalf("GetKeyByIndex with empty map didn't panic")
 	}
 
-	m.Add("one", 1)
-	m.Add("three", 2)
-	m.Add("two", 2)
-	m.Add("three", 3)
+	ps.Add("one", 1)
+	ps.Add("three", 2)
+	ps.Add("two", 2)
+	ps.Add("three", 3)
 
 	if !willPanic(func() {
-		m.GetKeyByIndex(-1)
+		ps.GetKeyByIndex(-1)
 	}) {
 		t.Fatalf("GetKeyByIndex with negative index didn't panic")
 	}
 
 	if !willPanic(func() {
-		m.GetKeyByIndex(10)
+		ps.GetKeyByIndex(10)
 	}) {
 		t.Fatalf("GetKeyByIndex with out-of-bound index didn't panic")
 	}
 
 	expected := "three"
-	if v := m.GetKeyByIndex(3); v != expected {
+	if v := ps.GetKeyByIndex(3); v != expected {
 		t.Fatalf("GetKeyByIndex(3), Expect %#v, got %#v", expected, v)
 	}
 }
 
 func TestPairs_GetByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.GetByIndex(0)
+		ps.GetByIndex(0)
 	}) {
 		t.Fatalf("GetByIndex with empty map didn't panic")
 	}
 
-	m.Add("one", 1)
-	m.Add("three", 2)
-	m.Add("two", 2)
-	m.Add("three", 3)
+	ps.Add("one", 1)
+	ps.Add("three", 2)
+	ps.Add("two", 2)
+	ps.Add("three", 3)
 
 	if !willPanic(func() {
-		m.GetByIndex(-1)
+		ps.GetByIndex(-1)
 	}) {
 		t.Fatalf("GetByIndex negative index didn't panic")
 	}
 
 	if !willPanic(func() {
-		m.GetByIndex(10)
+		ps.GetByIndex(10)
 	}) {
 		t.Fatalf("GetByIndex out-of-bound index didn't panic")
 	}
 
 	expected := geko.Pair[string, int]{Key: "three", Value: 2}
-	if v := m.GetByIndex(1); v != expected {
+	if v := ps.GetByIndex(1); v != expected {
 		t.Fatalf("GetByIndex(1), Expect %#v, got %#v", expected, v)
 	}
 }
 
 func TestPairs_SetKeyByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.SetKeyByIndex(0, "new")
+		ps.SetKeyByIndex(0, "new")
 	}) {
 		t.Fatalf("SetKeyByIndex with empty map didn't panic")
 	}
 
-	m.Add("one", 1)
-	m.Add("four", 2)
-	m.Add("three", 3)
+	ps.Add("one", 1)
+	ps.Add("four", 2)
+	ps.Add("three", 3)
 
 	if !willPanic(func() {
-		m.SetKeyByIndex(3, "new")
+		ps.SetKeyByIndex(3, "new")
 	}) {
 		t.Fatalf("SetKeyByIndex with out-of-bound index didn't panic")
 	}
 
-	m.SetKeyByIndex(1, "two")
-	if m.GetKeyByIndex(1) != "two" {
+	ps.SetKeyByIndex(1, "two")
+	if ps.GetKeyByIndex(1) != "two" {
 		t.Fatalf("SetKeyByIndex do not effect")
 	}
 }
 
 func TestPairs_SetValueByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.SetValueByIndex(0, 0)
+		ps.SetValueByIndex(0, 0)
 	}) {
 		t.Fatalf("SetValueByIndex with empty map didn't panic")
 	}
 
-	m.Add("one", 1)
-	m.Add("two", 4)
-	m.Add("three", 3)
+	ps.Add("one", 1)
+	ps.Add("two", 4)
+	ps.Add("three", 3)
 
 	if !willPanic(func() {
-		m.SetKeyByIndex(3, "new")
+		ps.SetKeyByIndex(3, "new")
 	}) {
 		t.Fatalf("SetValueByIndex with out-of-bound index didn't panic")
 	}
 
-	m.SetValueByIndex(1, 2)
-	if m.GetValueByIndex(1) != 2 {
+	ps.SetValueByIndex(1, 2)
+	if ps.GetValueByIndex(1) != 2 {
 		t.Fatalf("SetValueByIndex do not effect")
 	}
 }
 
 func TestPairs_SetByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.SetByIndex(0, "zero", 0)
+		ps.SetByIndex(0, "zero", 0)
 	}) {
 		t.Fatalf("SetByIndex with empty map didn't panic")
 	}
 
-	m.Add("one", 1)
-	m.Add("four", 4)
-	m.Add("three", 3)
+	ps.Add("one", 1)
+	ps.Add("four", 4)
+	ps.Add("three", 3)
 
 	if !willPanic(func() {
-		m.SetByIndex(3, "new", 0)
+		ps.SetByIndex(3, "new", 0)
 	}) {
 		t.Fatalf("SetByIndex with out-of-bound index didn't panic")
 	}
 
-	m.SetByIndex(1, "two", 2)
-	if m.GetByIndex(1) != geko.CreatePair("two", 2) {
+	ps.SetByIndex(1, "two", 2)
+	if ps.GetByIndex(1) != geko.CreatePair("two", 2) {
 		t.Fatalf("SetByIndex do not effect")
 	}
 }
 
 func TestPairs_GetValueByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.GetValueByIndex(0)
+		ps.GetValueByIndex(0)
 	}) {
 		t.Fatalf("GetValueByIndex with empty map didn't panic")
 	}
 
-	m.Add("one", 1)
-	m.Add("three", 2)
-	m.Add("two", 2)
-	m.Add("three", 3)
+	ps.Add("one", 1)
+	ps.Add("three", 2)
+	ps.Add("two", 2)
+	ps.Add("three", 3)
 
 	if !willPanic(func() {
-		m.GetValueByIndex(-1)
+		ps.GetValueByIndex(-1)
 	}) {
 		t.Fatalf("GetValueByIndex negative index didn't panic")
 	}
 
 	if !willPanic(func() {
-		m.GetValueByIndex(10)
+		ps.GetValueByIndex(10)
 	}) {
 		t.Fatalf("GetValueByIndex out-of-bound index didn't panic")
 	}
 
 	expected := 2
-	if v := m.GetValueByIndex(2); v != expected {
+	if v := ps.GetValueByIndex(2); v != expected {
 		t.Fatalf("GetValueByIndex(2), Expect %#v, got %#v", expected, v)
 	}
 }
 
 func TestPairs_Add(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("a", 1)
-	m.Add("b", 2)
-	m.Add("a", 3)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("a", 1)
+	ps.Add("b", 2)
+	ps.Add("a", 3)
 
-	keys := m.Keys()
-	values := m.Values()
+	keys := ps.Keys()
+	values := ps.Values()
 
 	exceptedKeys := []string{"a", "b", "a"}
 	if !reflect.DeepEqual(keys, exceptedKeys) {
@@ -345,8 +345,8 @@ func TestPairs_Add(t *testing.T) {
 }
 
 func TestPairs_Append(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Append([]geko.Pair[string, int]{
+	ps := geko.NewPairs[string, int]()
+	ps.Append([]geko.Pair[string, int]{
 		{"s", 2},
 		{"z", 7},
 		{"z", 4},
@@ -354,16 +354,16 @@ func TestPairs_Append(t *testing.T) {
 		{"z", 1},
 	}...)
 
-	keys := m.Keys()
+	keys := ps.Keys()
 	expectedKeys := []string{"s", "z", "z", "w", "z"}
 	if !reflect.DeepEqual(keys, expectedKeys) {
 		t.Fatalf("After Append, expect keys %#v, got %#v", expectedKeys, keys)
 	}
 
 	values := [][]int{
-		m.Get("s"),
-		m.Get("z"),
-		m.Get("w"),
+		ps.Get("s"),
+		ps.Get("z"),
+		ps.Get("w"),
 	}
 	expectedValues := [][]int{{2}, {7, 4, 1}, {9}}
 	if !reflect.DeepEqual(values, expectedValues) {
@@ -372,60 +372,60 @@ func TestPairs_Append(t *testing.T) {
 }
 
 func TestPairs_Delete(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("a", 1)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("a", 1)
 
-	m.Delete("b") // should not panic
+	ps.Delete("b") // should not panic
 
-	m.Delete("a")
+	ps.Delete("a")
 
-	if m.Len() != 0 {
+	if ps.Len() != 0 {
 		t.Fatalf("After Delete all item, Map is not empty")
 	}
 
-	m = geko.NewPairs[string, int]()
-	m.Add("a", 1)
-	m.Add("b", 2)
-	m.Add("c", 3)
-	m.Add("b", 4)
-	m.Delete("b")
+	ps = geko.NewPairs[string, int]()
+	ps.Add("a", 1)
+	ps.Add("b", 2)
+	ps.Add("c", 3)
+	ps.Add("b", 4)
+	ps.Delete("b")
 
-	if m.Len() != 2 {
+	if ps.Len() != 2 {
 		t.Fatalf("After Delete item, Len does not correct")
 	}
 
-	if m.Count("b") != 0 {
+	if ps.Count("b") != 0 {
 		t.Fatalf("Delete do not delete all matched item")
 	}
 }
 
 func TestPairs_DeleteByIndex(t *testing.T) {
-	m := geko.NewPairs[string, int]()
+	ps := geko.NewPairs[string, int]()
 
 	if !willPanic(func() {
-		m.DeleteByIndex(1)
+		ps.DeleteByIndex(1)
 	}) {
 		t.Fatalf("DeleteByIndex with empty map didn't panic")
 	}
 
-	m.Add("a", 1)
-	m.Add("b", 2)
-	m.Add("b", 22)
-	m.Add("c", 3)
+	ps.Add("a", 1)
+	ps.Add("b", 2)
+	ps.Add("b", 22)
+	ps.Add("c", 3)
 
-	m.DeleteByIndex(1)
+	ps.DeleteByIndex(1)
 
-	if m.Len() != 3 {
+	if ps.Len() != 3 {
 		t.Fatalf("After DeleteByIndex, Len does not correct")
 	}
 
-	if !m.Has("b") {
+	if !ps.Has("b") {
 		t.Fatalf("After DeleteByIndex, all same key deleted")
 	}
 
-	m.DeleteByIndex(1)
+	ps.DeleteByIndex(1)
 
-	keys := m.Keys()
+	keys := ps.Keys()
 	excepted := []string{"a", "c"}
 	if !reflect.DeepEqual(keys, excepted) {
 		t.Fatalf("After another DeleteByIndex, excepted keys %#v, got %#v", excepted, keys)
@@ -433,19 +433,19 @@ func TestPairs_DeleteByIndex(t *testing.T) {
 }
 
 func TestPairs_Clear(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("a", 1)
-	m.Add("b", 2)
-	m.Clear()
+	ps := geko.NewPairs[string, int]()
+	ps.Add("a", 1)
+	ps.Add("b", 2)
+	ps.Clear()
 
-	if m.Len() != 0 {
+	if ps.Len() != 0 {
 		t.Fatalf("After Clean, map is not empty")
 	}
 
 	// After Clear, new Add should not panic
-	m.Add("b", 2)
-	m.Add("a", 1)
-	keys := m.Keys()
+	ps.Add("b", 2)
+	ps.Add("a", 1)
+	keys := ps.Keys()
 	excepted := []string{"b", "a"}
 	if !reflect.DeepEqual(keys, excepted) {
 		t.Fatalf("After Clean, old values should not effect new order")
@@ -456,12 +456,12 @@ func TestPairs_Len(t *testing.T) {
 	for times := 0; times < 20; times++ {
 		exceptedLength := rand.Int() % 100
 
-		m := geko.NewPairs[string, int]()
+		ps := geko.NewPairs[string, int]()
 		for i := 0; i < exceptedLength; i++ {
-			m.Add(strconv.Itoa(i), i)
+			ps.Add(strconv.Itoa(i), i)
 		}
 
-		length := m.Len()
+		length := ps.Len()
 		if length != exceptedLength {
 			t.Fatalf("Length excepted %d, got %d", exceptedLength, length)
 		}
@@ -469,43 +469,43 @@ func TestPairs_Len(t *testing.T) {
 }
 
 func TestPairs_Keys(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("one", 1)
-	m.Add("three", 2)
-	m.Add("two", 2)
-	m.Add("three", 3)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("one", 1)
+	ps.Add("three", 2)
+	ps.Add("two", 2)
+	ps.Add("three", 3)
 
-	m.Delete("one")
+	ps.Delete("one")
 
 	excepted := []string{"three", "two", "three"}
-	keys := m.Keys()
+	keys := ps.Keys()
 	if !reflect.DeepEqual(keys, excepted) {
 		t.Fatalf("Excepted keys %#v, got %#v", excepted, keys)
 	}
 
 	keys[0] = "haha"
-	if reflect.DeepEqual(keys, m.Keys()) {
+	if reflect.DeepEqual(keys, ps.Keys()) {
 		t.Fatalf("Modify return keys should not effect pairs")
 	}
 }
 
 func TestPairs_Values(t *testing.T) {
-	m := geko.NewPairs[string, int]()
-	m.Add("one", 1)
-	m.Add("three", 2)
-	m.Add("two", 2)
-	m.Add("three", 3)
+	ps := geko.NewPairs[string, int]()
+	ps.Add("one", 1)
+	ps.Add("three", 2)
+	ps.Add("two", 2)
+	ps.Add("three", 3)
 
-	m.Delete("one")
+	ps.Delete("one")
 
 	excepted := []int{2, 2, 3}
-	values := m.Values()
+	values := ps.Values()
 	if !reflect.DeepEqual(values, excepted) {
 		t.Fatalf("Excepted values %#v, got %#v", excepted, values)
 	}
 
 	values[0] = 100
-	if reflect.DeepEqual(values, m.Values()) {
+	if reflect.DeepEqual(values, ps.Values()) {
 		t.Fatalf("Modify return values should not effect map")
 	}
 
@@ -513,14 +513,14 @@ func TestPairs_Values(t *testing.T) {
 		Value int
 	}
 
-	m2 := geko.NewPairs[string, *s]()
-	m2.Add("one", &s{Value: 1})
-	m2.Add("two", &s{Value: 2})
-	m2.Add("three", &s{Value: 3})
+	ps2 := geko.NewPairs[string, *s]()
+	ps2.Add("one", &s{Value: 1})
+	ps2.Add("two", &s{Value: 2})
+	ps2.Add("three", &s{Value: 3})
 
-	m2.Values()[2].Value = 100
+	ps2.Values()[2].Value = 100
 
-	if m2.GetFirstOrZeroValue("three").Value != 100 {
+	if ps2.GetFirstOrZeroValue("three").Value != 100 {
 		t.Fatalf("Use pointer as value type will allow user modifier inner value")
 	}
 }
@@ -606,14 +606,14 @@ func TestPairs_Dedup(t *testing.T) {
 }
 
 func TestPairs_Sort(t *testing.T) {
-	m := geko.NewPairs[int, string]()
-	m.Add(3, "three.2")
-	m.Add(1, "one")
-	m.Add(4, "four")
-	m.Add(2, "two")
-	m.Add(3, "three.1")
+	ps := geko.NewPairs[int, string]()
+	ps.Add(3, "three.2")
+	ps.Add(1, "one")
+	ps.Add(4, "four")
+	ps.Add(2, "two")
+	ps.Add(3, "three.1")
 
-	m.Sort(func(a, b *geko.Pair[int, string]) bool {
+	ps.Sort(func(a, b *geko.Pair[int, string]) bool {
 		return a.Key < b.Key
 	})
 
@@ -625,19 +625,19 @@ func TestPairs_Sort(t *testing.T) {
 		{4, "four"},
 	}
 
-	if !reflect.DeepEqual(m.List, exceptedPairs) {
-		t.Fatalf("Sort result excepted %#v, got %#v", exceptedPairs, m.List)
+	if !reflect.DeepEqual(ps.List, exceptedPairs) {
+		t.Fatalf("Sort result excepted %#v, got %#v", exceptedPairs, ps.List)
 	}
 }
 
 func TestPairs_Filter(t *testing.T) {
-	m := geko.NewPairs[int, string]()
-	m.Add(1, "one")
-	m.Add(2, "two")
-	m.Add(3, "three")
-	m.Add(4, "four")
+	ps := geko.NewPairs[int, string]()
+	ps.Add(1, "one")
+	ps.Add(2, "two")
+	ps.Add(3, "three")
+	ps.Add(4, "four")
 
-	m.Filter(func(p *geko.Pair[int, string]) bool {
+	ps.Filter(func(p *geko.Pair[int, string]) bool {
 		return p.Key%2 == 0
 	})
 
@@ -646,8 +646,8 @@ func TestPairs_Filter(t *testing.T) {
 		{4, "four"},
 	}
 
-	if !reflect.DeepEqual(exceptedPairs, m.List) {
-		t.Fatalf("Filter result excepted %#v, got %#v", exceptedPairs, m.List)
+	if !reflect.DeepEqual(exceptedPairs, ps.List) {
+		t.Fatalf("Filter result excepted %#v, got %#v", exceptedPairs, ps.List)
 	}
 }
 
@@ -660,9 +660,9 @@ func TestPairs_MarshalJSON_InvalidKeyType(t *testing.T) {
 }
 
 func TestPairs_MarshalJSON_Nil(t *testing.T) {
-	var m *geko.Pairs[string, int]
+	var ps *geko.Pairs[string, int]
 
-	data, err := json.Marshal(m)
+	data, err := json.Marshal(ps)
 	if err != nil {
 		t.Fatalf("Marshal nil pairs with error: %s", err.Error())
 	}
@@ -702,19 +702,19 @@ func TestPairs_MarshalJSON_StringToInt(t *testing.T) {
 }
 
 func TestPairs_MarshalJSON_StringToAny(t *testing.T) {
-	psAny := geko.NewPairs[string, any]()
+	ps := geko.NewPairs[string, any]()
 
-	psAny.Add("string", "hello")
-	psAny.Add("number", 2)
-	psAny.Add("float", 2.5)
-	psAny.Add("json_number", json.Number("10"))
-	psAny.Add("array", []any{7, "s"})
-	psAny.Add("bool", true)
-	psAny.Add("null", nil)
+	ps.Add("string", "hello")
+	ps.Add("number", 2)
+	ps.Add("float", 2.5)
+	ps.Add("json_number", json.Number("10"))
+	ps.Add("array", []any{7, "s"})
+	ps.Add("bool", true)
+	ps.Add("null", nil)
 
-	data, err := json.Marshal(psAny)
+	data, err := json.Marshal(ps)
 	if err != nil {
-		t.Fatalf("Marshal %#v with error: %s", psAny, err.Error())
+		t.Fatalf("Marshal %#v with error: %s", ps, err.Error())
 	}
 
 	if string(data) != `{`+
@@ -726,23 +726,23 @@ func TestPairs_MarshalJSON_StringToAny(t *testing.T) {
 }
 
 func TestPairs_UnmarshalJSON_DirectlyCallWithInvalidData(t *testing.T) {
-	m := geko.NewPairs[string, any]()
-	if err := m.UnmarshalJSON([]byte("")); err == nil {
+	ps := geko.NewPairs[string, any]()
+	if err := ps.UnmarshalJSON([]byte("")); err == nil {
 		t.Fatalf("Should report error with empty input")
 	}
-	if err := m.UnmarshalJSON([]byte(`x`)); err == nil {
+	if err := ps.UnmarshalJSON([]byte(`x`)); err == nil {
 		t.Fatalf("Should report error with invalid input")
 	}
 }
 
 func TestPairs_UnmarshalJSON_NilPairs(t *testing.T) {
-	var m geko.ObjectItems
-	if err := json.Unmarshal([]byte(`{"a": 1}`), m); err == nil {
+	var ps geko.ObjectItems
+	if err := json.Unmarshal([]byte(`{"a": 1}`), ps); err == nil {
 		t.Fatalf("Unmarshal into nil pairs do not error")
 	}
 
 	// *Pairs = std map, so this format is better, it supports null like std map
-	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &ps); err != nil {
 		t.Fatalf("Unmarshal object into pointer to nil pairs with error: %s", err.Error())
 	}
 
@@ -798,14 +798,14 @@ func TestPairs_UnmarshalJSON_ConcreteValueType(t *testing.T) {
 }
 
 func TestPairs_UnmarshalJSON_InitializedPairs(t *testing.T) {
-	m := geko.NewPairs[string, any]()
-	m.Add("old", "value")
-	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+	ps := geko.NewPairs[string, any]()
+	ps.Add("old", "value")
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &ps); err != nil {
 		t.Fatalf("Unmarshal into initialized map with error: %s", err.Error())
 	}
 
 	exceptedKeys := []string{"old", "a"}
-	keys := m.Keys()
+	keys := ps.Keys()
 	if !reflect.DeepEqual(keys, exceptedKeys) {
 		t.Fatalf("Excepted keys %#v, got %#v", exceptedKeys, keys)
 	}
@@ -844,12 +844,12 @@ func TestPairs_UnmarshalJSON_DuplicatedKey(t *testing.T) {
 }
 
 func TestPairs_UnmarshalJSON_InnerValueUseOurType(t *testing.T) {
-	m := geko.NewPairs[string, any]()
-	if err := json.Unmarshal([]byte(`{"arr":[1,2,{"a":1,"b":2,"a":3}]}`), &m); err != nil {
+	ps := geko.NewPairs[string, any]()
+	if err := json.Unmarshal([]byte(`{"arr":[1,2,{"a":1,"b":2,"a":3}]}`), &ps); err != nil {
 		t.Fatalf("Unmarshal error: %s", err.Error())
 	}
 
-	arr := m.Get("arr")
+	arr := ps.Get("arr")
 	if len(arr) == 0 {
 		t.Fatalf("Key arr not exist")
 	}
