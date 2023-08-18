@@ -1,3 +1,71 @@
+// Package geko provides GEneric Keep Order types.
+//
+// It's mainly used to solve the issue that in some scenarios, the field order
+// in JSON object is meaningful, but when unmarshal into a normal map, the
+// order information will be erased. See [golang/go#27179].
+//
+// There are 3 container types:
+//
+//   - [Map], and it's type alias [Object], to replace map.
+//   - [Pairs], and it's type alias [ObjectItems], to replace map, when you need
+//     to keep all values of duplicated key.
+//   - [List], and it's type alias [Array] to replace slice.
+//
+// And a new [Any] type to replace the interface{}, it will use types above to
+// do json unmarshal.
+//
+// The [JSONUnmarshal] function is a shorthand for defined a [Any] and unmarshal
+// data into it.
+//
+// # Example of JSON processing
+//
+//	result, _ := geko.JSONUnmarshal([]byte(`{"b": 1, "a": 2, "b": 3}`))
+//	object, _ := result.(geko.ObjectItems)
+//	output, _ := json.Marshal(object)
+//	fmt.Println(string(output)) // {"b":1,"a:2","b":3}
+//
+// If you do not want duplicated key in result, try [UseObject]:
+//
+//	result, _ := geko.JSONUnmarshal([]byte(`{"b": 1, "a": 2, "b": 3}`), geko.UseObject())
+//	object, _ := result.(geko.Object)
+//	object.Keys() // => ["b", "a"]
+//	output, _ := json.Marshal(object)
+//	fmt.Println(string(output)) // {"b":3,"a:2"}
+//
+// The [UseObject] option will make it use [Object] to unmarshal json Object,
+// instead of [ObjectItems]. [Object] will automatically deal with duplicated
+// key for you. Maybe you think "b" should be 1, or "b" should appear after "a",
+// You can adjust this behavior by using [ObjectOnDuplicatedKey]
+// with [DuplicatedKeyStrategy].
+//
+// [JSONUnmarshal] supports all json item, that's why it returns any. You can
+// directly unmarshal into a [Object]/[ObjectItems] or [Array] too, if the type
+// of input data is determined:
+//
+//	var arr geko.Array // or geko.Object for json object
+//	_ := json.Unmarshal([]byte(`[1, 2, {"one": 1}, false]`), &arr)
+//	object, _ := arr.Get(2).(geko.ObjectItems)
+//	object.GetFirstOrZeroValue("one") // => 1
+//
+// But you can't customize [DecodeOptions] when doing this, it will always use
+// default options.
+//
+// # Example for normally use
+//
+// Outside of JSON processing, these types can also be used simply as generic
+// container types with insertion order preservation feature:
+//
+//	m := geko.NewMap[int, string]()
+//	m.Set(1, "one")
+//	m.Set(3, "three")
+//	m.Set(2, "two")
+//
+//	m.Get(3) // "three", true
+//	m.GetValueByIndex(1) // "three"
+//
+// There are many API for [Map], [List] and [Pairs], see their document for details.
+//
+// [golang/go#27179]: https://github.com/golang/go/issues/27179
 package geko
 
 import (
@@ -8,70 +76,71 @@ import (
 	"unsafe"
 )
 
-// ===== Decoder =====
-
-// JSONUnmarshal likes json.Unmarshal, but uses our [Map]/[Pairs] and [List]
-// when meet JSON object and array.
-//
-// So the type of returned value can be:
-// bool, float64/[json.Number], string, nil,
-// *[Map][string, any]/*[Pairs][string, any], *[List][any].
-//
-// The any type in the above container can only be the above type, recursive.
-func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
-	return newDecoder(bytes.NewReader(data), option...).decode()
-}
-
-type decodeOptions struct {
+type DecodeOptions struct {
 	useNumber             bool
-	usePairs              bool
+	useObject             bool
 	duplicatedKeyStrategy DuplicatedKeyStrategy
 }
 
 // DecodeOption is option type for [JSONUnmarshal].
-type DecodeOption func(opts *decodeOptions)
+type DecodeOption func(opts *DecodeOptions)
+
+func CreateDecodeOptions(option ...DecodeOption) DecodeOptions {
+	opts := DecodeOptions{}
+	opts.Update(option...)
+	return opts
+}
+
+func (opts *DecodeOptions) Update(option ...DecodeOption) {
+	for _, opt := range option {
+		opt(opts)
+	}
+}
 
 // UseNumber option will make [JSONUnmarshal] uses [json.Number] to store
 // JSON number, instead of float64.
 func UseNumber(v bool) DecodeOption {
-	return func(opts *decodeOptions) {
+	return func(opts *DecodeOptions) {
 		opts.useNumber = v
 	}
 }
 
-// UsePairs option will make [JSONUnmarshal] uses *[Pairs][string, any] to
-// store JSON object, instead of *[Map][string, any].
-func UsePairs(v bool) DecodeOption {
-	return func(opts *decodeOptions) {
-		opts.usePairs = v
+// UseObject option will make [JSONUnmarshal] uses [Object] to
+// store JSON object, instead of [ObjectItems].
+func UseObject() DecodeOption {
+	return func(opts *DecodeOptions) {
+		opts.useObject = true
 	}
 }
 
-// OnDuplicatedKey set the strategy when there are duplicated key in JSON
-// object.
+// UseObject option will make [JSONUnmarshal] uses [Object] to
+// store JSON object, instead of [ObjectItems].
+func UseObjectItem() DecodeOption {
+	return func(opts *DecodeOptions) {
+		opts.useObject = false
+	}
+}
+
+// ObjectOnDuplicatedKey set the strategy when there are duplicated key in JSON
+// object. Only effect when [UseObject] is enabled.
 //
-// See document of [DuplicatedKeyStrategy] and its enum value for details
-func OnDuplicatedKey(strategy DuplicatedKeyStrategy) DecodeOption {
-	return func(opts *decodeOptions) {
+// See document of [DuplicatedKeyStrategy] and its enum value for details.
+func ObjectOnDuplicatedKey(strategy DuplicatedKeyStrategy) DecodeOption {
+	return func(opts *DecodeOptions) {
 		opts.duplicatedKeyStrategy = strategy
 	}
 }
 
 type decoder struct {
 	decoder *json.Decoder
-	opts    decodeOptions
+	opts    DecodeOptions
 }
 
-func newDecoder(r io.Reader, option ...DecodeOption) *decoder {
-	decoder := &decoder{
-		decoder: json.NewDecoder(r),
+func newDecoder(data []byte, opts DecodeOptions) *decoder {
+	return &decoder{
+		decoder: json.NewDecoder(bytes.NewReader(data)),
+		opts:    opts,
 	}
-
-	for _, opt := range option {
-		opt(&decoder.opts)
-	}
-
-	return decoder
 }
 
 func (d *decoder) decode() (any, error) {
@@ -85,7 +154,10 @@ func (d *decoder) decode() (any, error) {
 	}
 
 	if _, err := d.decoder.Token(); err != io.EOF {
-		return nil, newSyntaxError("invalid character after top-level value", d.decoder.InputOffset())
+		return nil, newSyntaxError(
+			"invalid character after top-level value",
+			d.decoder.InputOffset(),
+		)
 	}
 
 	return item, nil
@@ -128,12 +200,12 @@ func (d *decoder) nextAfterToken(token json.Token) (any, error) {
 		case '{':
 			{
 				var object jsonObject[string, any]
-				if d.opts.usePairs {
-					object = NewPairs[string, any]()
-				} else {
+				if d.opts.useObject {
 					m := NewMap[string, any]()
 					m.SetDuplicatedKeyStrategy(d.opts.duplicatedKeyStrategy)
 					object = m
+				} else {
+					object = NewPairs[string, any]()
 				}
 				if err := parseIntoObject[string, any](d, object, true); err != nil {
 					return nil, err
@@ -200,12 +272,12 @@ func parseIntoArray[T any, A jsonArray[T]](d *decoder, array A) error {
 	}
 }
 
-func unmarshalArray[T any, A jsonArray[T]](data []byte, array A) error {
-	if !isAny[T]() {
+func unmarshalArray[T any, A jsonArray[T]](data []byte, array A, option ...DecodeOption) error {
+	if !isEmptyInterface[T]() {
 		return json.Unmarshal(data, array.innerSlice())
 	}
 
-	d := newDecoder(bytes.NewReader(data))
+	d := newDecoder(data, CreateDecodeOptions(option...))
 
 	token, err := d.decoder.Token()
 	if err != nil {
@@ -268,7 +340,7 @@ func marshalObject[K comparable, V any, O jsonObject[K, V]](object O) ([]byte, e
 func parseIntoObject[K comparable, V any, O jsonObject[K, V]](
 	d *decoder, object O, valueIsAny bool,
 ) error {
-	valueIsAny = valueIsAny || isAny[V]()
+	valueIsAny = valueIsAny || isEmptyInterface[V]()
 
 	for {
 		token, err := d.decoder.Token()
@@ -316,7 +388,7 @@ func unmarshalObject[K comparable, V any, O jsonObject[K, V]](
 		}
 	}
 
-	d := newDecoder(bytes.NewReader(data), option...)
+	d := newDecoder(data, CreateDecodeOptions(option...))
 
 	token, err := d.decoder.Token()
 	if err != nil {

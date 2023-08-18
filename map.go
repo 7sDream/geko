@@ -51,7 +51,7 @@ type Map[K comparable, V any] struct {
 
 // Object is [Map] whose type parameters are specialized as
 // [string, any], used to represent dynamic objects in JSON.
-type Object *Map[string, any]
+type Object = *Map[string, any]
 
 // NewMap creates a new empty map.
 func NewMap[K comparable, V any]() *Map[K, V] {
@@ -314,8 +314,13 @@ func (m Map[K, V]) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON implements [json.Unmarshaler] interface.
+//
 // You shouldn't call this directly, use [json.Unmarshal]/[JSONUnmarshal]
 // instead.
 func (m *Map[K, V]) UnmarshalJSON(data []byte) error {
-	return unmarshalObject[K, V](data, m, OnDuplicatedKey(m.duplicatedKeyStrategy))
+	return unmarshalObject[K, V](
+		data, m,
+		UseObject(),
+		ObjectOnDuplicatedKey(m.duplicatedKeyStrategy),
+	)
 }

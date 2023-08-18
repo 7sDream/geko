@@ -1,6 +1,8 @@
 package geko_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"math/rand"
 	"reflect"
 	"strconv"
@@ -8,6 +10,37 @@ import (
 
 	"github.com/7sDream/geko"
 )
+
+func ExamplePairs() {
+	m := geko.NewPairs[string, int]()
+
+	m.Add("one", 1)
+	m.Add("three", 2)
+	m.Add("two", 2)
+	m.Add("three", 3)
+	for i, length := 0, m.Len(); i < length; i++ {
+		pair := m.GetByIndex(i)
+		fmt.Printf("%s: %d\n", pair.Key, pair.Value)
+	}
+
+	fmt.Println("-----")
+
+	m.Dedup(geko.Ignore)
+	for i, length := 0, m.Len(); i < length; i++ {
+		pair := m.GetByIndex(i)
+		fmt.Printf("%s: %d\n", pair.Key, pair.Value)
+	}
+
+	// Output:
+	// one: 1
+	// three: 2
+	// two: 2
+	// three: 3
+	// -----
+	// one: 1
+	// three: 2
+	// two: 2
+}
 
 func TestPairs_New(t *testing.T) {
 	l := geko.NewPairs[string, int]()
@@ -533,15 +566,17 @@ func TestPairs_ToMap(t *testing.T) {
 
 func TestPairs_Dedup(t *testing.T) {
 	cases := []struct {
-		strategy geko.DedupStrategy
+		strategy geko.DuplicatedKeyStrategy
 		keys     []string
 		values   []int
 	}{
-		{geko.KeepFirst, []string{"one", "three", "two"}, []int{1, 2, 2}},
-		{geko.KeepLast, []string{"one", "two", "three"}, []int{1, 2, 3}},
+		{geko.UpdateValueKeepOrder, []string{"one", "three", "two"}, []int{1, 3, 2}},
+		{geko.UpdateValueUpdateOrder, []string{"one", "two", "three"}, []int{1, 2, 3}},
+		{geko.KeepValueUpdateOrder, []string{"one", "two", "three"}, []int{1, 2, 2}},
+		{geko.Ignore, []string{"one", "three", "two"}, []int{1, 2, 2}},
 
 		/* invalid value treat as default strategy */
-		{geko.DedupStrategy(10), []string{"one", "three", "two"}, []int{1, 2, 2}},
+		{geko.DuplicatedKeyStrategy(10), []string{"one", "three", "two"}, []int{1, 3, 2}},
 	}
 
 	for _, tt := range cases {
@@ -613,5 +648,221 @@ func TestPairs_Filter(t *testing.T) {
 
 	if !reflect.DeepEqual(exceptedPairs, m.List) {
 		t.Fatalf("Filter result excepted %#v, got %#v", exceptedPairs, m.List)
+	}
+}
+
+func TestPairs_MarshalJSON_InvalidKeyType(t *testing.T) {
+	marshalWillReportError[*json.UnsupportedTypeError](t, geko.NewPairs[int, string]())
+	marshalWillReportError[*json.UnsupportedTypeError](t, geko.NewPairs[*string, int]())
+
+	type myString string
+	marshalWillReportError[*json.UnsupportedTypeError](t, geko.NewPairs[myString, int]())
+}
+
+func TestPairs_MarshalJSON_Nil(t *testing.T) {
+	var m *geko.Pairs[string, int]
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("Marshal nil pairs with error: %s", err.Error())
+	}
+
+	if string(data) != `null` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestMap_MarshalJSON_EmptyPairs(t *testing.T) {
+	ps := geko.NewPairs[string, any]()
+
+	data, err := json.Marshal(ps)
+	if err != nil {
+		t.Fatalf("Marshal empty pairs with error: %s", err.Error())
+	}
+
+	if string(data) != `{}` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestPairs_MarshalJSON_StringToInt(t *testing.T) {
+	ps := geko.NewPairs[string, int]()
+	ps.Add("z", 1)
+	ps.Add("a", 2)
+	ps.Add("n", 3)
+
+	data, err := json.Marshal(ps)
+	if err != nil {
+		t.Fatalf("Marshal %#v with error: %s", ps, err.Error())
+	}
+
+	if string(data) != `{"z":1,"a":2,"n":3}` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestPairs_MarshalJSON_StringToAny(t *testing.T) {
+	psAny := geko.NewPairs[string, any]()
+
+	psAny.Add("string", "hello")
+	psAny.Add("number", 2)
+	psAny.Add("float", 2.5)
+	psAny.Add("json_number", json.Number("10"))
+	psAny.Add("array", []any{7, "s"})
+	psAny.Add("bool", true)
+	psAny.Add("null", nil)
+
+	data, err := json.Marshal(psAny)
+	if err != nil {
+		t.Fatalf("Marshal %#v with error: %s", psAny, err.Error())
+	}
+
+	if string(data) != `{`+
+		`"string":"hello","number":2,"float":2.5,"json_number":10,`+
+		`"array":[7,"s"],"bool":true,"null":null`+
+		`}` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestPairs_UnmarshalJSON_DirectlyCallWithInvalidData(t *testing.T) {
+	m := geko.NewPairs[string, any]()
+	if err := m.UnmarshalJSON([]byte("")); err == nil {
+		t.Fatalf("Should report error with empty input")
+	}
+	if err := m.UnmarshalJSON([]byte(`x`)); err == nil {
+		t.Fatalf("Should report error with invalid input")
+	}
+}
+
+func TestPairs_UnmarshalJSON_NilPairs(t *testing.T) {
+	var m geko.ObjectItems
+	if err := json.Unmarshal([]byte(`{"a": 1}`), m); err == nil {
+		t.Fatalf("Unmarshal into nil pairs do not error")
+	}
+
+	// *Pairs = std map, so this format is better, it supports null like std map
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+		t.Fatalf("Unmarshal object into pointer to nil pairs with error: %s", err.Error())
+	}
+
+	var m2 = geko.NewPairs[string, any]()
+	if err := json.Unmarshal([]byte(`null`), &m2); err != nil {
+		t.Fatalf("Unmarshal null into pointer to nil pairs with error: %s", err.Error())
+	}
+	if m2 != nil {
+		t.Fatalf("Unmarshal null into Pairs do not get nil")
+	}
+}
+
+func TestPairs_UnmarshalJSON_InvalidKeyType(t *testing.T) {
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "{}", geko.NewPairs[int, string]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "{}", geko.NewPairs[*string, int]())
+
+	type myString string
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "{}", geko.NewPairs[myString, int]())
+}
+
+func TestPairs_UnmarshalJSON_UnmatchedType(t *testing.T) {
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "[]", geko.NewPairs[string, any]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "4", geko.NewPairs[string, any]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, `"string"`, geko.NewPairs[string, any]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "true", geko.NewPairs[string, any]())
+}
+
+func TestPairs_UnmarshalJSON_UnmatchedValueType(t *testing.T) {
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, `{"a":"str"}`, geko.NewPairs[string, int]())
+}
+
+func TestPairs_UnmarshalJSON_ConcreteValueType(t *testing.T) {
+	ps := geko.NewPairs[string, int]()
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &ps); err != nil {
+		t.Fatalf("Unmarshal with error: %s", err.Error())
+	}
+
+	ps2 := geko.NewPairs[string, s]()
+	if err := json.Unmarshal([]byte(`{"a": {"s": "good"}}`), &ps2); err != nil {
+		t.Fatalf("Unmarshal with error: %s", err.Error())
+	}
+	if ps2.GetValueByIndex(0).S != "good" {
+		t.Fatalf("Unmarshal into concrete struct type failed: %#v", ps2)
+	}
+
+	ps3 := geko.NewPairs[string, *s]()
+	if err := json.Unmarshal([]byte(`{"a": {"s": "good"}}`), &ps3); err != nil {
+		t.Fatalf("Unmarshal with error: %s", err.Error())
+	}
+	if ps3.GetValueByIndex(0).S != "good" {
+		t.Fatalf("Unmarshal into concrete struct pointer type failed: %#v", ps3)
+	}
+}
+
+func TestPairs_UnmarshalJSON_InitializedPairs(t *testing.T) {
+	m := geko.NewPairs[string, any]()
+	m.Add("old", "value")
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+		t.Fatalf("Unmarshal into initialized map with error: %s", err.Error())
+	}
+
+	exceptedKeys := []string{"old", "a"}
+	keys := m.Keys()
+	if !reflect.DeepEqual(keys, exceptedKeys) {
+		t.Fatalf("Excepted keys %#v, got %#v", exceptedKeys, keys)
+	}
+}
+
+func TestPairs_UnmarshalJSON_DuplicatedKey(t *testing.T) {
+	ps := geko.NewPairs[string, int]()
+
+	data := []byte(`{"a":1,"b":2,"a":3}`)
+
+	if err := json.Unmarshal(data, &ps); err != nil {
+		t.Fatalf("Unmarshal error: %s", err.Error())
+	}
+
+	excepted := []geko.Pair[string, int]{
+		{"a", 1},
+		{"b", 2},
+		{"a", 3},
+	}
+
+	if !reflect.DeepEqual(ps.List, excepted) {
+		t.Fatalf(
+			"Excepted keys %#v, got %#v",
+			excepted, ps.List,
+		)
+	}
+
+	output, err := json.Marshal(ps)
+	if err != nil {
+		t.Fatalf("Marshal error: %s", err.Error())
+	}
+
+	if !reflect.DeepEqual(output, data) {
+		t.Fatalf("Marshal result not same as input: %s", string(output))
+	}
+}
+
+func TestPairs_UnmarshalJSON_InnerValueUseOurType(t *testing.T) {
+	m := geko.NewPairs[string, any]()
+	if err := json.Unmarshal([]byte(`{"arr":[1,2,{"a":1,"b":2,"a":3}]}`), &m); err != nil {
+		t.Fatalf("Unmarshal error: %s", err.Error())
+	}
+
+	arr := m.Get("arr")
+	if len(arr) == 0 {
+		t.Fatalf("Key arr not exist")
+	}
+
+	l, ok := arr[0].(geko.Array)
+	if !ok {
+		t.Fatalf("Inner array is not List type")
+	}
+
+	obj := l.Get(2)
+
+	_, ok = obj.(geko.ObjectItems)
+	if !ok {
+		t.Fatalf("Inner array -> object is not Pairs type")
 	}
 }

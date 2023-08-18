@@ -2,7 +2,7 @@ package geko
 
 import "reflect"
 
-func isAny[T any]() bool {
+func isEmptyInterface[T any]() bool {
 	var checker T
 	var checkerRef = reflect.ValueOf(&checker).Elem()
 

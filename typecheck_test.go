@@ -31,31 +31,31 @@ type privateInterface interface {
 }
 
 func TestIsAny(t *testing.T) {
-	if !isAny[interface{}]() {
+	if !isEmptyInterface[interface{}]() {
 		t.Fatalf("isAny failed in type interface{}")
 	}
 
-	if !isAny[any]() {
+	if !isEmptyInterface[any]() {
 		t.Fatalf("isAny failed in type any")
 	}
 
-	if !isAny[emptyInterface]() {
+	if !isEmptyInterface[emptyInterface]() {
 		t.Fatalf("isAny failed in type emptyInterface")
 	}
 
-	if isAny[string]() {
+	if isEmptyInterface[string]() {
 		t.Fatalf("isAny failed in type string")
 	}
 
-	if isAny[int]() {
+	if isEmptyInterface[int]() {
 		t.Fatalf("isAny failed in type int")
 	}
 
-	if isAny[publicInterface]() {
+	if isEmptyInterface[publicInterface]() {
 		t.Fatalf("isAny failed in type publicInterface")
 	}
 
-	if isAny[privateInterface]() {
+	if isEmptyInterface[privateInterface]() {
 		t.Fatalf("isAny failed in type publicInterface")
 	}
 }

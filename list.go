@@ -1,17 +1,17 @@
 package geko
 
-// Wrapper type for a normal slice.
+// Wrapper type of a normal slice.
 //
-// Unmarshal from JSON into a *[List][any] will use *[Map][string, any] from
-// this package to store JSON object, use *[List][any] to store JSON array,
-// instead of normal map[string]any and []any from std lib.
+// If T is any, will use [Object] from this package to store JSON object,
+// use [Array] to store JSON array, instead of normal map[string]any and []any.
+// If T is a concrete type, the behavior is same as a normal slice.
 type List[T any] struct {
 	List []T
 }
 
 // Array is a [List] whose type parameters are specialized as any, used to
 // represent dynamic array in JSON.
-type Array *List[any]
+type Array = *List[any]
 
 // NewList create a new empty List.
 func NewList[T any]() *List[T] {

@@ -21,7 +21,7 @@ type Pairs[K comparable, V any] struct {
 
 // ObjectItems is [Pairs] whose type parameters are specialized as
 // [string, any], used to represent dynamic objects in JSON.
-type ObjectItems *Map[string, any]
+type ObjectItems = *Pairs[string, any]
 
 // NewPairs creates a new empty list.
 func NewPairs[K comparable, V any]() *Pairs[K, V] {
@@ -219,35 +219,11 @@ func (ps *Pairs[K, V]) ToMap(strategy DuplicatedKeyStrategy) *Map[K, V] {
 	return m
 }
 
-// DedupStrategy controls how [Pairs.Dedup] deal with duplicated key items.
-type DedupStrategy uint8
-
-const (
-	// KeepFirst will keep first item if key duplicated.
-	KeepFirst DedupStrategy = iota
-	// KeepFirst will keep last item if key duplicated.
-	KeepLast
-)
-
 // Dedup deduplicates this list by key.
 //
 // Implemented as converting it to a [Map] and back.
-func (ps *Pairs[K, V]) Dedup(strategy DedupStrategy) {
-	var mapDuplicatedKeyStrategy DuplicatedKeyStrategy
-	switch strategy {
-	default:
-		fallthrough
-	case KeepFirst:
-		{
-			mapDuplicatedKeyStrategy = Ignore
-		}
-	case KeepLast:
-		{
-			mapDuplicatedKeyStrategy = UpdateValueUpdateOrder
-		}
-	}
-
-	ps.List = ps.ToMap(mapDuplicatedKeyStrategy).Pairs().List
+func (ps *Pairs[K, V]) Dedup(strategy DuplicatedKeyStrategy) {
+	ps.List = ps.ToMap(strategy).Pairs().List
 }
 
 // Sort will reorder the list using the given less function.
@@ -281,5 +257,5 @@ func (ps Pairs[K, V]) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler interface.
 // You shouldn't call this directly, use json.Unmarshal(m) instead.
 func (ps *Pairs[K, V]) UnmarshalJSON(data []byte) error {
-	return unmarshalObject[K, V](data, ps, UsePairs(true))
+	return unmarshalObject[K, V](data, ps, UseObjectItem())
 }

@@ -11,6 +11,32 @@ import (
 	"github.com/7sDream/geko"
 )
 
+func ExampleMap() {
+	m := geko.NewMap[string, int]()
+
+	m.Set("one", 1)
+	m.Set("three", 2)
+	m.Set("two", 2)
+	m.Set("three", 3) // set always do not change order of existed key, so "three" will stay ahead of "two".
+	m.Set("four", 0)
+	m.Set("five", 5)
+
+	m.SetDuplicatedKeyStrategy(geko.UpdateValueUpdateOrder)
+	m.Add("four", 4) // Add will follow DuplicatedKeyStrategy, so now four is last key, and it's value is 4
+
+	for i, length := 0, m.Len(); i < length; i++ {
+		pair := m.GetByIndex(i)
+		fmt.Printf("%s: %d\n", pair.Key, pair.Value)
+	}
+
+	// Output:
+	// one: 1
+	// three: 3
+	// two: 2
+	// five: 5
+	// four: 4
+}
+
 func TestMap_Get(t *testing.T) {
 	m := geko.NewMap[string, int]()
 	m.Set("one", 1)
@@ -510,24 +536,269 @@ func TestMap_Filter(t *testing.T) {
 	}
 }
 
-// Iterate over the map.
-func ExampleMap_GetByIndex() {
-	m := geko.NewMap[string, int]()
-	m.Set("one", 1)
-	m.Set("three", 2)
-	m.Set("two", 2)
-	m.Set("three", 3) // do not change order of key "three", it will stay ahead of "two".
+func TestMap_MarshalJSON_InvalidKeyType(t *testing.T) {
+	marshalWillReportError[*json.UnsupportedTypeError](t, geko.NewMap[int, string]())
+	marshalWillReportError[*json.UnsupportedTypeError](t, geko.NewMap[*string, int]())
 
-	for i, length := 0, m.Len(); i < length; i++ {
-		pair := m.GetByIndex(i)
-		fmt.Printf("%s: %d\n", pair.Key, pair.Value)
+	type myString string
+	marshalWillReportError[*json.UnsupportedTypeError](t, geko.NewMap[myString, int]())
+}
+
+func TestMap_MarshalJSON_Nil(t *testing.T) {
+	var m *geko.Map[string, int]
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("Marshal nil map with error: %s", err.Error())
 	}
 
-	data, _ := json.Marshal(m)
-	fmt.Printf("marshal result: %s", string(data))
-	// Output:
-	// one: 1
-	// three: 3
-	// two: 2
-	// marshal result: {"one":1,"three":3,"two":2}
+	if string(data) != `null` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestMap_MarshalJSON_ValueError(t *testing.T) {
+	m := geko.NewMap[string, any]()
+	m.Add("invalid", json.Number("invalid"))
+
+	if _, err := json.Marshal(m); err == nil {
+		t.Fatalf("Marshal invalid number do not error")
+	}
+}
+
+func TestMap_MarshalJSON_EmptyMap(t *testing.T) {
+	m := geko.NewMap[string, any]()
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("Marshal empty map with error: %s", err.Error())
+	}
+
+	if string(data) != `{}` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestMap_MarshalJSON_StringToInt(t *testing.T) {
+	m := geko.NewMap[string, int]()
+	m.Set("z", 1)
+	m.Set("a", 2)
+	m.Set("n", 3)
+
+	data, err := json.Marshal(m)
+	if err != nil {
+		t.Fatalf("Marshal %#v with error: %s", m, err.Error())
+	}
+
+	if string(data) != `{"z":1,"a":2,"n":3}` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestMap_MarshalJSON_StringToAny(t *testing.T) {
+	mAny := geko.NewMap[string, any]()
+
+	mAny.Set("string", "hello")
+	mAny.Set("number", 2)
+	mAny.Set("float", 2.5)
+	mAny.Set("json_number", json.Number("10"))
+	mAny.Set("array", []any{7, "s"})
+	mAny.Set("bool", true)
+	mAny.Set("null", nil)
+
+	data, err := json.Marshal(mAny)
+	if err != nil {
+		t.Fatalf("Marshal %#v with error: %s", mAny, err.Error())
+	}
+
+	if string(data) != `{`+
+		`"string":"hello","number":2,"float":2.5,"json_number":10,`+
+		`"array":[7,"s"],"bool":true,"null":null`+
+		`}` {
+		t.Fatalf("Marshal result %s not correct", string(data))
+	}
+}
+
+func TestMap_UnmarshalJSON_DirectlyCallWithInvalidData(t *testing.T) {
+	m := geko.NewMap[string, any]()
+	if err := m.UnmarshalJSON([]byte("")); err == nil {
+		t.Fatalf("Should report error with empty input")
+	}
+	if err := m.UnmarshalJSON([]byte(`x`)); err == nil {
+		t.Fatalf("Should report error with invalid input")
+	}
+}
+
+func TestMap_UnmarshalJSON_NilMap(t *testing.T) {
+	var m geko.Object
+	if err := json.Unmarshal([]byte(`{"a": 1}`), m); err == nil {
+		t.Fatalf("Unmarshal into nil map do not error")
+	}
+
+	// *Map = std map, so this format is better, it supports null like std map
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+		t.Fatalf("Unmarshal object into pointer to nil map with error: %s", err.Error())
+	}
+
+	var m2 = geko.NewMap[string, any]()
+	if err := json.Unmarshal([]byte(`null`), &m2); err != nil {
+		t.Fatalf("Unmarshal null into pointer to nil map with error: %s", err.Error())
+	}
+	if m2 != nil {
+		t.Fatalf("Unmarshal null into Map do not get nil")
+	}
+}
+
+func TestMap_UnmarshalJSON_InvalidKeyType(t *testing.T) {
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "{}", geko.NewMap[int, string]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "{}", geko.NewMap[*string, int]())
+
+	type myString string
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "{}", geko.NewMap[myString, int]())
+}
+
+func TestMap_UnmarshalJSON_UnmatchedType(t *testing.T) {
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "[]", geko.NewMap[string, any]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "4", geko.NewMap[string, any]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, `"string"`, geko.NewMap[string, any]())
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, "true", geko.NewMap[string, any]())
+}
+
+func TestMap_UnmarshalJSON_UnmatchedValueType(t *testing.T) {
+	unmarshalWillReportError[*json.UnmarshalTypeError](t, `{"a":"str"}`, geko.NewMap[string, int]())
+}
+
+func TestMap_UnmarshalJSON_ConcreteValueType(t *testing.T) {
+	m := geko.NewMap[string, int]()
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+		t.Fatalf("Unmarshal with error: %s", err.Error())
+	}
+
+	m2 := geko.NewMap[string, s]()
+	if err := json.Unmarshal([]byte(`{"a": {"s": "good"}}`), &m2); err != nil {
+		t.Fatalf("Unmarshal with error: %s", err.Error())
+	}
+	if m2.GetOrZeroValue("a").S != "good" {
+		t.Fatalf("Unmarshal into concrete struct type failed: %#v", m2)
+	}
+
+	m3 := geko.NewMap[string, *s]()
+	if err := json.Unmarshal([]byte(`{"a": {"s": "good"}}`), &m3); err != nil {
+		t.Fatalf("Unmarshal with error: %s", err.Error())
+	}
+	if m3.GetOrZeroValue("a").S != "good" {
+		t.Fatalf("Unmarshal into concrete struct pointer type failed: %#v", m3)
+	}
+}
+
+func TestMap_UnmarshalJSON_InitializedMap(t *testing.T) {
+	m := geko.NewMap[string, any]()
+	m.Add("old", "value")
+	if err := json.Unmarshal([]byte(`{"a": 1}`), &m); err != nil {
+		t.Fatalf("Unmarshal into initialized map with error: %s", err.Error())
+	}
+
+	// The behavior of the standard library is to retain the old values
+	// and we are consistent with it
+
+	exceptedKeys := []string{"old", "a"}
+	keys := m.Keys()
+	if !reflect.DeepEqual(keys, exceptedKeys) {
+		t.Fatalf("Excepted keys %#v, got %#v", exceptedKeys, keys)
+	}
+}
+
+func TestMap_UnmarshalJSON_DuplicatedKey(t *testing.T) {
+	cases := []struct {
+		strategy       geko.DuplicatedKeyStrategy
+		exceptedKeys   []string
+		exceptedValues []int
+	}{
+		{geko.UpdateValueKeepOrder, []string{"a", "b"}, []int{3, 2}},
+		{geko.UpdateValueUpdateOrder, []string{"b", "a"}, []int{2, 3}},
+		{geko.KeepValueUpdateOrder, []string{"b", "a"}, []int{2, 1}},
+		{geko.Ignore, []string{"a", "b"}, []int{1, 2}},
+
+		/* invalid value treat as default strategy */
+		{geko.DuplicatedKeyStrategy(10), []string{"a", "b"}, []int{3, 2}},
+	}
+
+	for _, tt := range cases {
+		m := geko.NewMap[string, int]()
+		m.SetDuplicatedKeyStrategy(tt.strategy)
+
+		if err := json.Unmarshal([]byte(`{"a": 1, "b": 2, "a": 3}`), &m); err != nil {
+			t.Fatalf("Strategy %#v, unmarshal error: %s", tt.strategy, err.Error())
+		}
+
+		keys := m.Keys()
+		values := m.Values()
+
+		if !reflect.DeepEqual(keys, tt.exceptedKeys) {
+			t.Fatalf(
+				"For strategy %#v, excepted keys %#v, got %#v",
+				tt.strategy, tt.exceptedKeys, keys,
+			)
+		}
+
+		if !reflect.DeepEqual(values, tt.exceptedValues) {
+			t.Fatalf(
+				"For strategy %#v, excepted values %#v, got %#v",
+				tt.strategy, tt.exceptedValues, values,
+			)
+		}
+	}
+}
+
+func TestMap_UnmarshalJSON_InnerValueUseOurType(t *testing.T) {
+	cases := []struct {
+		strategy       geko.DuplicatedKeyStrategy
+		exceptedKeys   []string
+		exceptedValues []any
+	}{
+		{geko.UpdateValueKeepOrder, []string{"a", "b"}, []any{3.0, 2.0}},
+		{geko.UpdateValueUpdateOrder, []string{"b", "a"}, []any{2.0, 3.0}},
+		{geko.KeepValueUpdateOrder, []string{"b", "a"}, []any{2.0, 1.0}},
+		{geko.Ignore, []string{"a", "b"}, []any{1.0, 2.0}},
+	}
+	for _, tt := range cases {
+		m := geko.NewMap[string, any]()
+		m.SetDuplicatedKeyStrategy(tt.strategy)
+		if err := json.Unmarshal([]byte(`{"arr":[1,2,{"a":1,"b":2,"a":3}]}`), &m); err != nil {
+			t.Fatalf("Unmarshal error: %s", err.Error())
+		}
+
+		arr, exist := m.Get("arr")
+		if !exist {
+			t.Fatalf("Key arr not exist")
+		}
+
+		l, ok := arr.(geko.Array)
+		if !ok {
+			t.Fatalf("Inner array is not List type")
+		}
+
+		obj := l.Get(2)
+
+		m2, ok := obj.(geko.Object)
+		if !ok {
+			t.Fatalf("Inner object is not Map type")
+		}
+
+		keys := m2.Keys()
+		if !reflect.DeepEqual(keys, tt.exceptedKeys) {
+			t.Fatalf(
+				"Inner object do not follow strategy %#v, excepted keys %#v, got %#v",
+				tt.strategy, tt.exceptedKeys, keys,
+			)
+		}
+
+		values := m2.Values()
+		if !reflect.DeepEqual(values, tt.exceptedValues) {
+			t.Fatalf(
+				"Inner object do not follow strategy %#v, excepted values %#v, got %#v",
+				tt.strategy, tt.exceptedValues, values,
+			)
+		}
+	}
 }
