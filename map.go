@@ -3,11 +3,11 @@ package geko
 // DuplicatedKeyStrategy controls the behavior of [Map.Add] when meet a
 // duplicate key. Default strategy is [UpdateValueKeepOrder].
 //
-// If you want store all values of duplicated key, use [Pairs] type instead.
+// If you want store all values of duplicated key, use [Pairs] instead.
 type DuplicatedKeyStrategy uint8
 
 const (
-	// UpdateValueKeepOrder will use new value, but keep the key order.
+	// UpdateValueKeepOrder will use new value, but do not change key order.
 	//
 	// {"a": 1, "b": 2, "a": 3} => {"a": 3, "b": 2}
 	//
@@ -22,26 +22,25 @@ const (
 	//
 	// {"a": 1, "b": 2, "a": 3} => {"b": 2, "a": 1}
 	KeepValueUpdateOrder
-	// Ignore will ignore the wholes set option when key duplicated.
+	// Ignore will do nothing, keeps old key order and value.
 	//
 	// {"a": 1, "b": 2, "a": 3} => {"a": 1, "b": 2}
 	Ignore
 )
 
-// Map is a map, in which the kv pairs will keep order of their insert.
+// Map is a map, in which the kv pairs will keep order of their insertion.
 //
-// In JSON unmarshal, it will use the order of keys appear in JSON string,
+// In JSON unmarshal, it will use the order of keys in input JSON data,
 // and marshal output will use the same order.
 //
-// When unmarshal from JSON into a *[Map][string, any], all JSON object will be
-// stored in *[Map][string, any], all JSON array will be stored in *[List][any],
+// When unmarshal from JSON into a [Object], all JSON object will be
+// stored in [Object], all JSON array will be stored in [Array],
 // instead of normal map[string]any and []any from std lib.
 //
 // You can [Map.SetDuplicatedKeyStrategy] before call [json.Unmarshal] to
 // control the behavior when object has duplicated key in your JSON string data.
 //
-// If you can't make sure the outmost item is object, see [JSONUnmarshal]
-// function.
+// If you can't make sure the outmost item is object, try [JSONUnmarshal].
 type Map[K comparable, V any] struct {
 	order []K
 	inner map[K]V
@@ -49,7 +48,7 @@ type Map[K comparable, V any] struct {
 	duplicatedKeyStrategy DuplicatedKeyStrategy
 }
 
-// Object is [Map] whose type parameters are specialized as
+// Object is a [Map], whose type parameters are specialized as
 // [string, any], used to represent dynamic objects in JSON.
 type Object = *Map[string, any]
 
@@ -83,7 +82,7 @@ func (m *Map[K, V]) SetDuplicatedKeyStrategy(strategy DuplicatedKeyStrategy) {
 }
 
 // Get a value by key. The second return value tells if the key exists. If
-// not, returned value will be zero value of type V.
+// not, first return value will be zero value of type V.
 func (m *Map[K, V]) Get(key K) (V, bool) {
 	v, exist := m.inner[key]
 	return v, exist
@@ -95,13 +94,13 @@ func (m *Map[K, V]) Has(key K) bool {
 	return exist
 }
 
-// GetOrZeroValue return stored value by key, or the zero value of type V
+// GetOrZeroValue return value by key, or the zero value of type V
 // if key not exist.
 func (m *Map[K, V]) GetOrZeroValue(key K) V {
 	return m.inner[key]
 }
 
-// GetKeyByIndex get key by it's index in order.
+// GetKeyByIndex get key by index of key order.
 //
 // You should make sure 0 <= i < Len(), panic if out of bound.
 func (m *Map[K, V]) GetKeyByIndex(index int) K {

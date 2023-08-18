@@ -523,6 +523,11 @@ func TestMap_Sort(t *testing.T) {
 
 func TestMap_Filter(t *testing.T) {
 	m := geko.NewMap[int, string]()
+
+	m.Filter(func(p *geko.Pair[int, string]) bool {
+		return p.Key%2 == 0
+	}) // test panic for empty map
+
 	m.Set(1, "one")
 	m.Set(2, "two")
 	m.Set(3, "three")
