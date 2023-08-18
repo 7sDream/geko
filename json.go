@@ -11,10 +11,10 @@
 //     to keep all values of duplicated key.
 //   - [List], and it's type alias [Array] to replace slice.
 //   - [Any] type, to replace the interface{}, it will use types above to
-//     do json unmarshal.
+//     do JSON unmarshal.
 //
-// The [JSONUnmarshal] function is a shorthand for defined a [Any] and unmarshal
-// data into it.
+// The [JSONUnmarshal] function is a shorthand for defined an [Any] and
+// unmarshal data into it.
 //
 // # Example of JSON processing
 //
@@ -35,17 +35,17 @@
 //	output, _ := json.Marshal(object)
 //	fmt.Println(string(output)) // {"b":3,"a:2"}
 //
-// The [UseObject] option will make it use [Object] to unmarshal json object,
+// The [UseObject] option will make it use [Object] to unmarshal JSON object,
 // instead of [ObjectItems]. [Object] will automatically deal with duplicated
 // key for you. Maybe you think "b" should be 1, or "b" should appear after "a",
-// This behavior can be adjusted by using [ObjectOnDuplicatedKey]
+// those behavior can be adjusted by using [ObjectOnDuplicatedKey]
 // with [DuplicatedKeyStrategy].
 //
-// [JSONUnmarshal] supports all json item, that's why it returns any. You can
+// [JSONUnmarshal] supports all JSON item, that's why it returns any. You can
 // directly unmarshal into a [Object]/[ObjectItems] or [Array], if the type
 // of input data is determined:
 //
-//	var arr geko.Array // or geko.Object for json object
+//	var arr geko.Array // or geko.Object for JSON object
 //	_ := json.Unmarshal([]byte(`[1, 2, {"one": 1}, false]`), &arr)
 //	object, _ := arr.Get(2).(geko.ObjectItems)
 //	object.GetFirstOrZeroValue("one") // => 1
@@ -53,7 +53,7 @@
 // But you can't customize [DecodeOptions] when doing this, it will always use
 // default options.
 //
-// # Example for normally use
+// # Use container type directly
 //
 // Outside of JSON processing, these types can also be used simply as generic
 // container types with insertion order preservation feature:
@@ -83,15 +83,11 @@ import (
 //
 // Zero value(default value) of it is:
 //
-//   - Do not use [json.Number] for json number, change it by apply [UseNumber]
-//     option.
-//   - Uses [ObjectItems] for json object, change it by apply [UseObject],
-//     and change it back by apply [UseObjectItems] option.
-//   - When [UseObject], the default [DuplicatedKeyStrategy] is
-//     [UpdateValueKeepOrder], change it by apply
-//     [ObjectOnDuplicatedKey] option.
+//   - Do not use [json.Number] for JSON number
+//   - Uses [ObjectItems] for JSON object.
 //
-// See also: [CreateDecodeOptions].
+// See also: [CreateDecodeOptions], [UseNumber], [UseObjectItems], [UseObject],
+// [ObjectOnDuplicatedKey].
 type DecodeOptions struct {
 	useNumber             bool
 	useObject             bool
@@ -101,7 +97,7 @@ type DecodeOptions struct {
 // DecodeOption is atom/modifier of [DecodeOptions].
 type DecodeOption func(opts *DecodeOptions)
 
-// CreateDecodeOptions creates a DecodeOptions by apply all option to the
+// CreateDecodeOptions creates a [DecodeOptions] by apply all option to the
 // default decode option.
 func CreateDecodeOptions(option ...DecodeOption) DecodeOptions {
 	opts := DecodeOptions{}
@@ -109,15 +105,14 @@ func CreateDecodeOptions(option ...DecodeOption) DecodeOptions {
 	return opts
 }
 
-// Apply a option in current options.
+// Apply option to current options.
 func (opts *DecodeOptions) Apply(option ...DecodeOption) {
 	for _, opt := range option {
 		opt(opts)
 	}
 }
 
-// UseNumber will change unmarshal behavior to using [json.Number] for json
-// number.
+// UseNumber will enable or disable using [json.Number] for json number.
 func UseNumber(v bool) DecodeOption {
 	return func(opts *DecodeOptions) {
 		opts.useNumber = v
@@ -125,15 +120,19 @@ func UseNumber(v bool) DecodeOption {
 }
 
 // UseObject will change unmarshal behavior to using [Object] for JSON object.
+//
+// See also: [ObjectOnDuplicatedKey], [UseObjectItems].
 func UseObject() DecodeOption {
 	return func(opts *DecodeOptions) {
 		opts.useObject = true
 	}
 }
 
-// UseObject will change unmarshal behavior (back) to using [ObjectItem] for
-// JSON object.
-func UseObjectItem() DecodeOption {
+// UseObjectItems will change unmarshal behavior (back) to using [ObjectItems]
+// for JSON object.
+//
+// See also: [UseObject].
+func UseObjectItems() DecodeOption {
 	return func(opts *DecodeOptions) {
 		opts.useObject = false
 	}

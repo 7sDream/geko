@@ -179,7 +179,7 @@ func (ps *Pairs[K, V]) DeleteByIndex(index int) {
 	ps.List = append(ps.List[:index], ps.List[index+1:]...)
 }
 
-// Clean this list.
+// Clear this list.
 func (ps *Pairs[K, V]) Clear() {
 	ps.List = nil
 }
@@ -257,5 +257,5 @@ func (ps Pairs[K, V]) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON implements json.Unmarshaler interface.
 // You shouldn't call this directly, use json.Unmarshal(m) instead.
 func (ps *Pairs[K, V]) UnmarshalJSON(data []byte) error {
-	return unmarshalObject[K, V](data, ps, UseObjectItem())
+	return unmarshalObject[K, V](data, ps, UseObjectItems())
 }

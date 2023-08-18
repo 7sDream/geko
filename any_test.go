@@ -98,7 +98,7 @@ func TestJSONUnmarshal_UseNumber(t *testing.T) {
 func TestJSONUnmarshal_UseObjectItem(t *testing.T) {
 	data := []byte(`{"a":1,"a":2,"obj":{"b":1,"b":2},"arr":[{"c":1,"c":2}]}`)
 
-	result, err := geko.JSONUnmarshal(data, geko.UseObjectItem())
+	result, err := geko.JSONUnmarshal(data, geko.UseObjectItems())
 	if err != nil {
 		t.Fatalf("Unmarshal error: %s", err.Error())
 	}

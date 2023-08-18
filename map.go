@@ -223,7 +223,7 @@ func (m *Map[K, V]) DeleteByIndex(index int) {
 	delete(m.inner, key)
 }
 
-// Clean this map.
+// Clear this map.
 func (m *Map[K, V]) Clear() {
 	m.order = nil
 	m.inner = nil

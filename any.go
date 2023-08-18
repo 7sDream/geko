@@ -2,14 +2,14 @@ package geko
 
 import "encoding/json"
 
-// Any is a wrapper for a any value. But when unmarshal, it uses our
+// Any is a wrapper for an any value. But when unmarshal, it uses our
 // [Object]/[ObjectItems] and [Array] when meet JSON object and array.
 //
-// So the type of [Any.Value] after a [json.Unmarshal] can be:
+// So the type of Any.Value after a [json.Unmarshal] can be:
 // bool, float64/[json.Number], string, nil,
 // [Object]/[ObjectItems], [Array].
 //
-// You can customize the unmarshal behavior by set [Any.Opts] before call
+// You can customize the unmarshal behavior by set Any.Opts before call
 // [json.Unmarshal].
 //
 // Notice: Usually you don't need to use this type directly. And, do not use
@@ -40,7 +40,7 @@ func (v *Any) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// A convenience function for unmarshal json data into an [Any] and get the
+// A convenience function for unmarshal JSON data into an [Any] and get the
 // inner any value.
 func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 	a := Any{Opts: CreateDecodeOptions(option...)}

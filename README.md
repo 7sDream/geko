@@ -36,7 +36,7 @@ output, _ := json.Marshal(object)
 fmt.Println(string(output)) // {"a":3,"b":2}
 ```
 
-`UseObject` will make `JSONUnmarshal` use `Object` to deal with json Object, it is alias of `*Map[string, any]`.
+`UseObject` will make `JSONUnmarshal` use `Object` to deal with JSON Object, it is alias of `*Map[string, any]`.
 
 ### Duplicated key strategy
 

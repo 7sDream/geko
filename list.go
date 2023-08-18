@@ -4,6 +4,7 @@ package geko
 //
 // If T is any, will use [ObjectItems] from this package to store JSON object,
 // use [Array] to store JSON array, instead of normal map[string]any and []any.
+//
 // If T is a concrete type, the behavior is same as a normal slice.
 type List[T any] struct {
 	List []T
@@ -61,12 +62,14 @@ func (l *List[T]) innerSlice() *[]T {
 }
 
 // MarshalJSON implements [json.Marshaler] interface.
+//
 // You should not call this directly, use [json.Marshal] instead.
 func (l List[T]) MarshalJSON() ([]byte, error) {
 	return marshalArray[T](&l)
 }
 
 // UnmarshalJSON implements [json.Unmarshaler] interface.
+//
 // You should not call this directly, use [json.Marshal] instead.
 func (l *List[T]) UnmarshalJSON(data []byte) error {
 	return unmarshalArray[T](data, l)
