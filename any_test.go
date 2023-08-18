@@ -74,22 +74,22 @@ func TestJSONUnmarshal_UseNumber(t *testing.T) {
 		t.Fatalf("Unmarshal error: %s", err.Error())
 	}
 
-	m, ok := result2.(geko.ObjectItems)
+	ps, ok := result2.(geko.ObjectItems)
 	if !ok {
 		t.Fatalf("result type is not Map: %#v", result)
 	}
 
-	f := m.GetFirstOrZeroValue("float")
+	f := ps.GetFirstOrZeroValue("float")
 	if _, ok := f.(json.Number); !ok {
 		t.Fatalf("float number in object is not json.Number: %#v", f)
 	}
 
-	i := m.GetFirstOrZeroValue("int")
+	i := ps.GetFirstOrZeroValue("int")
 	if _, ok := i.(json.Number); !ok {
 		t.Fatalf("int number in object is not json.Number: %#v", i)
 	}
 
-	f2 := m.GetFirstOrZeroValue("arr").(geko.Array).Get(0)
+	f2 := ps.GetFirstOrZeroValue("arr").(geko.Array).Get(0)
 	if _, ok := f2.(json.Number); !ok {
 		t.Fatalf("float number in object -> list is not json.Number: %#v", f2)
 	}

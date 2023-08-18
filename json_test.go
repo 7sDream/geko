@@ -7,6 +7,9 @@ import (
 	"testing"
 )
 
+// This file only contains helper function
+// real tests for json processing are placed in test file of each types.
+
 type s struct {
 	S string `json:"s"`
 }

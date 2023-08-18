@@ -124,39 +124,39 @@ func TestList_Len(t *testing.T) {
 func TestList_MarshalJSON_Nil(t *testing.T) {
 	var l *geko.List[int]
 
-	data, err := json.Marshal(l)
+	output, err := json.Marshal(l)
 	if err != nil {
 		t.Fatalf("Marshal nil list with error: %s", err.Error())
 	}
 
-	if string(data) != `null` {
-		t.Fatalf("Marshal result %s not correct", string(data))
+	if string(output) != `null` {
+		t.Fatalf("Marshal result %s not correct", string(output))
 	}
 }
 
 func TestList_MarshalJSON_InternalNilList(t *testing.T) {
 	l := geko.NewList[int]()
 
-	data, err := json.Marshal(l)
+	output, err := json.Marshal(l)
 	if err != nil {
 		t.Fatalf("Marshal empty list with error: %s", err.Error())
 	}
 
-	if string(data) != `[]` {
-		t.Fatalf("Marshal result %s not correct", string(data))
+	if string(output) != `[]` {
+		t.Fatalf("Marshal result %s not correct", string(output))
 	}
 }
 
 func TestList_MarshalJSON_ConcreteType(t *testing.T) {
 	l := geko.NewListFrom[int]([]int{1, 2, 3})
 
-	data, err := json.Marshal(l)
+	output, err := json.Marshal(l)
 	if err != nil {
 		t.Fatalf("Marshal empty list with error: %s", err.Error())
 	}
 
-	if string(data) != `[1,2,3]` {
-		t.Fatalf("Marshal result %s not correct", string(data))
+	if string(output) != `[1,2,3]` {
+		t.Fatalf("Marshal result %s not correct", string(output))
 	}
 }
 
@@ -167,22 +167,22 @@ func TestList_MarshalJSON_AnyType(t *testing.T) {
 		geko.NewMap[string, any](),
 	})
 
-	data, err := json.Marshal(l)
+	output, err := json.Marshal(l)
 	if err != nil {
 		t.Fatalf("Marshal empty list with error: %s", err.Error())
 	}
 
-	if string(data) != `[1,2.5,true,null,{"a":1},{}]` {
-		t.Fatalf("Marshal result %s not correct", string(data))
+	if string(output) != `[1,2.5,true,null,{"a":1},{}]` {
+		t.Fatalf("Marshal result %s not correct", string(output))
 	}
 }
 
 func TestList_UnmarshalJSON_DirectlyCallWithInvalidData(t *testing.T) {
-	m := geko.NewList[any]()
-	if err := m.UnmarshalJSON([]byte("")); err == nil {
+	l := geko.NewList[any]()
+	if err := l.UnmarshalJSON([]byte("")); err == nil {
 		t.Fatalf("Should report error with empty input")
 	}
-	if err := m.UnmarshalJSON([]byte(`x`)); err == nil {
+	if err := l.UnmarshalJSON([]byte(`x`)); err == nil {
 		t.Fatalf("Should report error with invalid input")
 	}
 }
@@ -225,20 +225,20 @@ func TestList_UnmarshalJSON_ConcreteType(t *testing.T) {
 		t.Fatalf("Unmarshal with error: %s", err.Error())
 	}
 
-	m2 := geko.NewList[s]()
-	if err := json.Unmarshal([]byte(`[{"s": "good"}]`), &m2); err != nil {
+	l2 := geko.NewList[s]()
+	if err := json.Unmarshal([]byte(`[{"s": "good"}]`), &l2); err != nil {
 		t.Fatalf("Unmarshal with error: %s", err.Error())
 	}
-	if m2.Get(0).S != "good" {
-		t.Fatalf("Unmarshal into concrete struct type failed: %#v", m2)
+	if l2.Get(0).S != "good" {
+		t.Fatalf("Unmarshal into concrete struct type failed: %#v", l2)
 	}
 
-	m3 := geko.NewList[*s]()
-	if err := json.Unmarshal([]byte(`[{"s": "good"}]`), &m3); err != nil {
+	l3 := geko.NewList[*s]()
+	if err := json.Unmarshal([]byte(`[{"s": "good"}]`), &l3); err != nil {
 		t.Fatalf("Unmarshal with error: %s", err.Error())
 	}
-	if m3.Get(0).S != "good" {
-		t.Fatalf("Unmarshal into concrete struct pointer type failed: %#v", m3)
+	if l3.Get(0).S != "good" {
+		t.Fatalf("Unmarshal into concrete struct pointer type failed: %#v", l3)
 	}
 }
 
@@ -248,9 +248,6 @@ func TestList_UnmarshalJSON_InitializedList(t *testing.T) {
 	if err := json.Unmarshal([]byte(`[1]`), &l); err != nil {
 		t.Fatalf("Unmarshal into initialized map with error: %s", err.Error())
 	}
-
-	// The behavior of the standard library is to clear the list
-	// and we are consistent with it
 
 	excepted := []int{1}
 	if !reflect.DeepEqual(l.List, excepted) {
@@ -277,13 +274,13 @@ func TestList_UnmarshalJSON_InnerValueUseOurType(t *testing.T) {
 	arr := l.Get(1)
 	ll, ok := arr.(geko.Array)
 	if !ok {
-		t.Fatalf("Inner array is not List type")
+		t.Fatalf("Inner array is not Array type")
 	}
 
 	arrObj := ll.Get(1)
 	llm, ok := arrObj.(geko.ObjectItems)
 	if !ok {
-		t.Fatalf("Inner array -> object is not Object type")
+		t.Fatalf("Inner array -> object is not ObjectItems type")
 	}
 
 	llmItem := llm.GetByIndex(0)
@@ -294,7 +291,7 @@ func TestList_UnmarshalJSON_InnerValueUseOurType(t *testing.T) {
 	obj := l.Get(2)
 	lm, ok := obj.(geko.ObjectItems)
 	if !ok {
-		t.Fatalf("Inner object is not Object type")
+		t.Fatalf("Inner object is not ObjectItems type")
 	}
 
 	objArr := lm.GetValueByIndex(1)
