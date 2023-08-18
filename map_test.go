@@ -706,9 +706,6 @@ func TestMap_UnmarshalJSON_InitializedMap(t *testing.T) {
 		t.Fatalf("Unmarshal into initialized map with error: %s", err.Error())
 	}
 
-	// The behavior of the standard library is to retain the old values
-	// and we are consistent with it
-
 	exceptedKeys := []string{"old", "a"}
 	keys := m.Keys()
 	if !reflect.DeepEqual(keys, exceptedKeys) {
