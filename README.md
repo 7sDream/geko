@@ -70,9 +70,9 @@ The `UpdateValueKeepOrder` is chosen as default strategy because it matches the 
 > 
 ```
 
-### Use container type directly
+### Generic container
 
-Those type can also be used directly:
+The type parameters do not limited to `[string, any]`, you can use other type you want.
 
 #### Map
 

@@ -38,7 +38,7 @@
 // The [UseObject] option will make it use [Object] to unmarshal JSON object,
 // instead of [ObjectItems]. [Object] will automatically deal with duplicated
 // key for you. Maybe you think "b" should be 1, or "b" should appear after "a",
-// those behavior can be adjusted by using [ObjectOnDuplicatedKey]
+// these behavior can be adjusted by using [ObjectOnDuplicatedKey]
 // with [DuplicatedKeyStrategy].
 //
 // [JSONUnmarshal] supports all JSON item, that's why it returns any. You can
