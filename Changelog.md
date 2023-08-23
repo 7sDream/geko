@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2023-08-23
+
 ### Added
 
 - This changelog file.
@@ -21,5 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - First version.
 
-[Unreleased]: https://github.com/7sDream/geko/compare/v0.1.0...master
+[Unreleased]: https://github.com/7sDream/geko/compare/v0.1.1...master
+[0.1.1]: https://github.com/7sDream/geko/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/7sDream/geko/releases/tag/v0.1.0
