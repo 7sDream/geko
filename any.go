@@ -9,7 +9,7 @@ import "encoding/json"
 // bool, float64/[json.Number], string, nil,
 // [Object]/[ObjectItems], [Array].
 //
-// You can customize the unmarshal behavior by set Any.Opts before call
+// You can customize the unmarshal behavior by setting Any.Opts before call
 // [json.Unmarshal].
 //
 // Notice: Usually you don't need to use this type directly. And, do not use
