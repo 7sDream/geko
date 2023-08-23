@@ -1,6 +1,6 @@
 # geko
 
-![license-badge] ![coverage-badge] [![document-badge]][document]
+![version-badge] [![build-badge]][workflow] ![coverage-badge] ![license-badge] [![document-badge]][document]
 
 geko provides GEneric Keep Order types.
 
@@ -11,10 +11,11 @@ There are many projects trying to solve it, but most of them lack some features 
 ## Features
 
 - Not limited to JSON processing, can also be used as container with insertion order preservation feature.
-- Generics, for better performance.
+- Generics, use as little reflection as possible, for better performance,
 - Customizable strategy to deal with duplicated key, auto deduplication.
-- Option to use json.Number to preserve the full precision of number field in unmarshaling.
-- Fully tested, 100% coverage.
+- Option to use `json.Number` to preserve the full precision of number field.
+- Very tiny, 0 dependencies.
+- Fully tested, keep 100% coverage.
 
 **Status**: Beta. All features I need are implemented and tested, But API design may not be the final version.
 
@@ -147,8 +148,11 @@ See [Document] for detail of all APIs.
 
 MIT. See LICENSE file.
 
+[version-badge]: https://img.shields.io/github/v/tag/7sDream/geko?filter=v*&style=for-the-badge&label=version
+[build-badge]: https://img.shields.io/github/actions/workflow/status/7sDream/geko/go.yml?style=for-the-badge
+[workflow]: https://github.com/7sDream/geko/actions/workflows/go.yml
 [coverage-badge]: https://raw.githubusercontent.com/7sDream/geko/badges/.badges/master/coverage.svg
-[document-badge]: https://img.shields.io/badge/-Document-blue?style=for-the-badge&logo=readthedocs
 [license-badge]: https://img.shields.io/github/license/7sDream/geko?style=for-the-badge
+[document-badge]: https://img.shields.io/badge/-Document-blue?style=for-the-badge&logo=readthedocs
 [document]: https://pkg.go.dev/github.com/7sDream/geko
 [golang/go#27179]: https://github.com/golang/go/issues/27179

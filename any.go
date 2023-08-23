@@ -10,9 +10,10 @@ import "encoding/json"
 // [Object]/[ObjectItems], [Array].
 //
 // You can customize the unmarshal behavior by setting Any.Opts before call
-// [json.Unmarshal].
+// [json.Unmarshal]. Usually you don't need to use this type directly,
+// `JSONUnmarshal` convenience function is more easy to use.
 //
-// Notice: Usually you don't need to use this type directly. And, do not use
+// And, do not use
 // this type on the value type parameter of the [Map], [Pairs] or [List].
 // Because container types already handles standard any type specially,
 // doing so will not only has no benefit, but also lose performance.
@@ -41,7 +42,7 @@ func (v *Any) UnmarshalJSON(data []byte) error {
 }
 
 // JSONUnmarshal is A convenience function for unmarshal JSON data into an
-// [Any] and get the inner any value.
+// [Any] and get the inner any value, with provided option applied.
 func JSONUnmarshal(data []byte, option ...DecodeOption) (any, error) {
 	a := Any{Opts: CreateDecodeOptions(option...)}
 	err := json.Unmarshal(data, &a)
